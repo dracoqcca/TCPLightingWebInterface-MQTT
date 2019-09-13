@@ -55,7 +55,7 @@ fclose($file_handle);
 		if ( isset( $DATA["rid"] ) ){ $DATA = array( $DATA ); }
 		
 		foreach($DATA as $room){
-			$RoomName = str_replace(' ', '', $room['name']);
+			$RoomName = str_replace(' ', '_', $room['name']);
 			if( isset($room['rid'] ) ){
 				$DEVICES = array();
 
@@ -116,7 +116,7 @@ fclose($file_handle);
 						$roomDevices = 0;
 						if ($mqtt->connect(true, NULL, $MQTTusername, $MQTTpassword)) {
 							foreach($DEVICES as $device){
-								$DeviceName = str_replace(' ', '', $device['name']);
+								$DeviceName = str_replace(' ', '_', $device['name']);
 								$file_handle = fopen('mqtt_sub.py', 'a') or die('Error opening file.');
 								$data1 = "\n### ".$RoomName."-".$DeviceName." \ndef on_message_".$RoomName."_".$DeviceName."(client, userdata, msg):\n";
 								$data2 = "    if (msg.payload.decode() == '0' or msg.payload.decode() == '1'):\n        print (\"".$RoomName." ".$DeviceName."\" + msg.payload.decode())\n";
@@ -165,7 +165,7 @@ fclose($file_handle);
 	$scenes = $sarray["scene"];
 	if( is_array($scenes) ){
 		foreach($scenes as $scene){
-			$SceneName = str_replace(' ', '', $scene['name']);
+			$SceneName = str_replace(' ', '_', $scene['name']);
 //		for($x = 0; $x < sizeof($scenes); $x++){
 			if ($mqtt->connect(true, NULL, $MQTTusername, $MQTTpassword)) {
 					$file_handle = fopen('mqtt_sub.py', 'a') or die('Error opening file.');
@@ -205,7 +205,7 @@ fclose($file_handle);
 		if ( isset( $DATA["rid"] ) ){ $DATA = array( $DATA ); }
 		
 		foreach($DATA as $room){
-			$RoomName = str_replace(' ', '', $room['name']);
+			$RoomName = str_replace(' ', '_', $room['name']);
 			if( isset($room['rid'] ) ){
 				$DEVICES = array();
 
@@ -249,7 +249,7 @@ fclose($file_handle);
 						$roomDevices = 0;
 						if ($mqtt->connect(true, NULL, $MQTTusername, $MQTTpassword)) {
 							foreach($DEVICES as $device){
-								$DeviceName = str_replace(' ', '', $device['name']);
+								$DeviceName = str_replace(' ', '_', $device['name']);
 								$file_handle = fopen('mqtt_sub.py', 'a') or die('Error opening file.');
 								$data1 = "\n### ".$RoomName."-".$device['name']." Begin\n";
 								$data2 = "client.message_callback_add('".$MQTT_prefix."/".$RoomName."/".$DeviceName."/".$device['did']."/switch', on_message_".$RoomName."_".$DeviceName.")\n";
@@ -282,7 +282,7 @@ $sarray = xmlToArray($sresult);
 $scenes = $sarray["scene"];
 if( is_array($scenes) ){
 	foreach($scenes as $scene){
-		$SceneName = str_replace(' ', '', $scene['name']);
+		$SceneName = str_replace(' ', '_', $scene['name']);
 //		for($x = 0; $x < sizeof($scenes); $x++){
 		if ($mqtt->connect(true, NULL, $MQTTusername, $MQTTpassword)) {
 				$file_handle = fopen('mqtt_sub.py', 'a') or die('Error opening file.');

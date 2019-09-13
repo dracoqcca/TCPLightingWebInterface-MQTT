@@ -59,7 +59,7 @@ require("phpMQTT/phpMQTT.php");
 		if ( isset( $DATA["rid"] ) ){ $DATA = array( $DATA ); }
 		
 		foreach($DATA as $room){
-			$RoomName = str_replace(' ', '', $room['name']);
+			$RoomName = str_replace(' ', '_', $room['name']);
 			if( isset($room['rid'] ) ){
 				$DEVICES = array();
 			
@@ -87,7 +87,7 @@ require("phpMQTT/phpMQTT.php");
 						$roomDevices = 0;
 						if ($mqtt->connect(true, retain, $MQTTusername, $MQTTpassword)) {
 							foreach($DEVICES as $device){
-								$DeviceName = str_replace(' ', '', $device['name']);
+								$DeviceName = str_replace(' ', '_', $device['name']);
 								if( isset($device['offline']) && $device['offline'] == 1){ $LWT = "offline"; } else {$LWT = "online";}
 								$mqtt->publish($MQTT_prefix.'/'.$RoomName.'/'.$DeviceName.'/'.$device['did'].'/status', $device['state']);
 								$mqtt->publish($MQTT_prefix.'/'.$RoomName.'/'.$DeviceName.'/'.$device['did'].'/brightness', $device['level']);
