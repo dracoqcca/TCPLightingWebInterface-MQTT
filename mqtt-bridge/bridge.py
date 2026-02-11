@@ -316,6 +316,7 @@ class MQTTBridge:
                 config = {
                     "name": dev.get("name", ""),
                     "unique_id": did,
+                    "object_id": f"tcp_{did}",
                     "command_topic": f"{base}/switch",
                     "state_topic": f"{base}/status",
                     "brightness_command_topic": f"{base}/brightness/set",
@@ -325,11 +326,18 @@ class MQTTBridge:
                     "qos": 0,
                     "payload_on": "1",
                     "payload_off": "0",
-                    "optimistic": "false",
+                    "optimistic": False,
+                    "device": {
+                        "identifiers": [f"tcp_light_{did}"],
+                        "name": dev.get("name", ""),
+                        "manufacturer": "TCP",
+                        "model": "Connected Smart Light",
+                        "suggested_area": room.get("name", ""),
+                    },
                 }
 
                 topic = f"{self.cfg.hass_topic_id}/light/{did}/config"
-                self.client.publish(topic, json.dumps(config), qos=0, retain=False)
+                self.client.publish(topic, json.dumps(config), qos=0, retain=True)
                 count += 1
 
         log.info("Published HA discovery for %d device(s)", count)

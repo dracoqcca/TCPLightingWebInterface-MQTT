@@ -174,7 +174,7 @@
 				foreach($DATA as $room){
 						if(  is_array($room["device"]) && $room["rid"] == $UID ){
 							$device = (array)$room["device"];
-							$THE_ROOM == $room;
+							$THE_ROOM = $room;
 
 							
 							if( isset($device["did"]) ){

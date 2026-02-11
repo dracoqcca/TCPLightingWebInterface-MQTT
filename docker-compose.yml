@@ -5,9 +5,13 @@ services:
     image: php:7-apache
     environment:
     - TZ=America/Toronto
+    - BRIDGE_IP=${BRIDGE_IP}
+    - BRIDGE_PORT=${BRIDGE_PORT:-443}
+    - TCP_TOKEN=${TCP_TOKEN}
+    - LOCAL_URL=${LOCAL_URL:-http://TCPLightingWebInterface}
+    - EXTERNAL_API_PASSWORD=${EXTERNAL_API_PASSWORD:-P@ssW0rd}
     ports:
     - "8000:80"
-    labels:
     volumes:
     - TCPLightingWebInterface_data:/var/www/html
     restart: unless-stopped
