@@ -1,0 +1,58 @@
+version: '3.6'
+services:
+  TCPLightingWebInterface:
+    container_name: TCPLightingWebInterface
+    image: php:7-apache
+    environment:
+    - TZ=America/Toronto
+    ports:
+    - "8000:80"
+    labels:
+    volumes:
+    - TCPLightingWebInterface_data:/var/www/html
+    restart: unless-stopped
+
+  mqtt-bridge:
+    container_name: mqtt-bridge
+    build: ./mqtt-bridge
+    depends_on:
+    - TCPLightingWebInterface
+    environment:
+    - TZ=America/Toronto
+    - MQTT_BROKER=${MQTT_BROKER}
+    - MQTT_PORT=${MQTT_PORT:-1883}
+    - MQTT_USERNAME=${MQTT_USERNAME}
+    - MQTT_PASSWORD=${MQTT_PASSWORD}
+    - MQTT_CLIENT_ID=${MQTT_CLIENT_ID:-tcp-bridge}
+    - MQTT_PREFIX=${MQTT_PREFIX:-light}
+    - MQTT_CONTROL=${MQTT_CONTROL:-tcp}
+    - ENABLE_HA_DISCOVERY=${ENABLE_HA_DISCOVERY:-1}
+    - HASS_TOPIC_ID=${HASS_TOPIC_ID:-homeassistant}
+    - HASS_ONLINE_TOPIC=${HASS_ONLINE_TOPIC:-hass/status}
+    - API_BASE_URL=${API_BASE_URL:-http://TCPLightingWebInterface}
+    - POLL_INTERVAL=${POLL_INTERVAL:-5}
+    restart: unless-stopped
+
+  Unbound:
+    container_name: Unbound
+    image: mvance/unbound-rpi
+    environment:
+    - TZ=America/Toronto
+    volumes:
+    - Unbound_data:/opt/unbound/etc/unbound
+    restart: unless-stopped
+    networks:
+      default:
+        ipv4_address: 172.18.0.254
+
+networks:
+
+  default:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.18.0.0/16
+
+volumes:
+  TCPLightingWebInterface_data:
