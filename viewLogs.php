@@ -9,7 +9,7 @@ pageHeader("Log Viewer");
 ?>
 <div class="container" style="padding: 20px; background-color: #fff; border: 1px solid #000;">
 <?php 
-if( LOG_ACTIONS == 1 || LOG_API_CALLS == 1){ 
+if( LOG_ACTIONS == 1 || LOG_API_CALLS == 1 || LOG_BRIDGE_ERRORS == 1){
 	
 	$curDir = dirname(__FILE__);
 	//make the log directory relative to the web path.
@@ -40,6 +40,18 @@ if( LOG_ACTIONS == 1 || LOG_API_CALLS == 1){
 	<?php
 		}else{
 			echo '<p>No API File Log found</p>';
+		}
+	}
+
+	if( LOG_BRIDGE_ERRORS == 1){
+	?>
+	<h1>Bridge Error Logs - Bridge-Errors.log</h1>
+	<?php if( file_exists(LOG_DIR . DIRECTORY_SEPARATOR . "Bridge-Errors.log") ){ ?>
+	<iframe src="<?php echo $REL_LOG_DIR . '/' . "Bridge-Errors.log"  ?>" style="width: 100%; height: 400px;"></iframe>
+
+	<?php
+		}else{
+			echo '<p>No Bridge Error Log found</p>';
 		}
 	}
 }else{

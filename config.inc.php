@@ -15,6 +15,7 @@ define("FORCE_FADE_OFF", 					0);							//makes it so when lights are turned on 
 define("SAVE_SCHEDULE", 					1); 						//saves schedule to a binary file on save schedule.sched
 define("LOG_ACTIONS", 						1); 						//saves completed actions to schedule.actioned
 define("LOG_API_CALLS", 					1);							//log issued API calls
+define("LOG_BRIDGE_ERRORS", 				1);							//log TCP bridge HTTP errors and curl failures
 
 /*
 	IFTTT additions Nov 28th / 2017

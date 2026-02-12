@@ -5,3 +5,4 @@ Plugins/tcp/TCP_token
 API-Request.log
 mqtt_sub.py
 .env
+CLAUDE.md

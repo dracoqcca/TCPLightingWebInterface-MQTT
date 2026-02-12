@@ -25,22 +25,34 @@ function pa($array){
 
 function getCurlReturn($postDataString){
 	$URL = SCHEME."://".LIGTHING_BRIDGE_IP.":".LIGHTING_BRIDGE_PORT."/gwr/gop.php";
-	
+
 	$ch = curl_init();
 	curl_setopt($ch, CURLOPT_URL, $URL);
 	curl_setopt($ch, CURLOPT_POST, true);
 	curl_setopt($ch, CURLOPT_POSTFIELDS, $postDataString);
+	curl_setopt($ch, CURLOPT_TIMEOUT, 10);
 	if (SCHEME == 'https') {
 		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
 	}
 
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-	
+
 	$result = curl_exec($ch);
-	
+
+	if($result === false){
+		BridgeErrorLog("CURL_FAIL errno=" . curl_errno($ch) . " error=\"" . curl_error($ch) . "\" url=" . $URL);
+		curl_close($ch);
+		return "";
+	}
+
+	$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 	curl_close($ch);
-	
+
+	if($httpCode >= 400){
+		BridgeErrorLog("HTTP_" . $httpCode . " url=" . $URL);
+	}
+
 	return $result;
 }
 
@@ -152,7 +164,7 @@ function pageHeader($title){
 	<a target="_blank" href="https://github.com/sktaylortrash/TCPLightingWebInterface-MQTT">GitHub Link</a>
     <!-- <a target="_blank" href="https://github.com/bren1818/TCPLightingWebInterface/wiki">Wiki</a>-->
     <a href="queryBuilder.php">IFTTT Query Builder</a>
-	<?php if( LOG_ACTIONS == 1 || LOG_API_CALLS == 1){
+	<?php if( LOG_ACTIONS == 1 || LOG_API_CALLS == 1 || LOG_BRIDGE_ERRORS == 1){
 		echo '<a href="viewLogs.php">View Logs</a>';
 	}
 	?>
@@ -182,6 +194,12 @@ function APILog($string){
 function SCHEDLog($string){
 	if( LOG_ACTIONS == 1 ){
 		file_put_contents(  LOG_DIR . DIRECTORY_SEPARATOR . "Schedule-Actioned.log", date('Y-m-d H:i:s '). $string . "\n", FILE_APPEND | LOCK_EX);
+	}
+}
+
+function BridgeErrorLog($string){
+	if( LOG_BRIDGE_ERRORS == 1 ){
+		file_put_contents(LOG_DIR . DIRECTORY_SEPARATOR . "Bridge-Errors.log", date('Y-m-d H:i:s '). $string . "\n", FILE_APPEND | LOCK_EX);
 	}
 }
 
