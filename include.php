@@ -53,62 +53,42 @@ function xmlToArray($string){
 }
 
 
-function getDevices(){
-	$CMD = "cmd=GWRBatch&data=<gwrcmds><gwrcmd><gcmd>RoomGetCarousel</gcmd><gdata><gip><version>1</version><token>".TOKEN."</token><fields>name,image,imageurl,control,power,product,class,realtype,status</fields></gip></gdata></gwrcmd></gwrcmds>&fmt=xml";
-	$result = getCurlReturn($CMD);
-	$array = xmlToArray($result);
-	$DATA = $array["gwrcmd"]["gdata"]["gip"]["room"];
-	$DEVICES = array();	
-	
-	if ( isset( $DATA["rid"] ) ){ $DATA = array( $DATA ); }
-	
-	foreach($DATA as $room){
-		
-		if( ! is_array($room["device"]) ){
-			//$DEVICES[] = $room["device"]; //singular device in a room
-		}else{
-			$device = (array)$room["device"];
-			if( isset($device["did"]) ){
-				//item is singular device
-				$DEVICES[] = $room["device"];
-			}else{
-				for( $x = 0; $x < sizeof($device); $x++ ){
-					if( isset($device[$x]) && is_array($device[$x]) && ! empty($device[$x]) ){
-						$DEVICES[] = $device[$x];
-					}
-				}
-			}	
+function extractDevicesFromRoom($room){
+	$devices = array();
+	if( !is_array($room["device"]) ){
+		return $devices;
+	}
+	$device = (array)$room["device"];
+	if( isset($device["did"]) ){
+		$devices[] = $device;
+	}else{
+		for( $x = 0; $x < sizeof($device); $x++ ){
+			if( isset($device[$x]) && is_array($device[$x]) && ! empty($device[$x]) ){
+				$devices[] = $device[$x];
+			}
 		}
 	}
-	return $DEVICES;
+	return $devices;
 }
 
-function getDevicesMQTT(){
+function getRoomCarouselData(){
 	$CMD = "cmd=GWRBatch&data=<gwrcmds><gwrcmd><gcmd>RoomGetCarousel</gcmd><gdata><gip><version>1</version><token>".TOKEN."</token><fields>name,image,imageurl,control,power,product,class,realtype,status</fields></gip></gdata></gwrcmd></gwrcmds>&fmt=xml";
 	$result = getCurlReturn($CMD);
 	$array = xmlToArray($result);
+	if( !isset($array["gwrcmd"]["gdata"]["gip"]["room"]) ){
+		return null;
+	}
 	$DATA = $array["gwrcmd"]["gdata"]["gip"]["room"];
-	$DEVICES = array();	
-	
 	if ( isset( $DATA["rid"] ) ){ $DATA = array( $DATA ); }
-	
+	return $DATA;
+}
+
+function getDevices(){
+	$DATA = getRoomCarouselData();
+	if( $DATA === null ){ return array(); }
+	$DEVICES = array();
 	foreach($DATA as $room){
-		
-		if( ! is_array($room["device"]) ){
-			//$DEVICES[] = $room["device"]; //singular device in a room
-		}else{
-			$device = (array)$room["device"];
-			if( isset($device["did"]) ){
-				//item is singular device
-				$DEVICES[] = $room["device"];
-			}else{
-				for( $x = 0; $x < sizeof($device); $x++ ){
-					if( isset($device[$x]) && is_array($device[$x]) && ! empty($device[$x]) ){
-						$DEVICES[] = $device[$x];
-					}
-				}
-			}	
-		}
+		$DEVICES = array_merge($DEVICES, extractDevicesFromRoom($room));
 	}
 	return $DEVICES;
 }

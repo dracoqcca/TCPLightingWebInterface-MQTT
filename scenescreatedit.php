@@ -783,17 +783,11 @@
 			</div>
 			<?php
 		
-			$CMD = "cmd=GWRBatch&data=<gwrcmds><gwrcmd><gcmd>RoomGetCarousel</gcmd><gdata><gip><version>1</version><token>".TOKEN."</token><fields>name,image,imageurl,control,power,product,class,realtype,status</fields></gip></gdata></gwrcmd></gwrcmds>&fmt=xml";
-			$result = getCurlReturn($CMD);
-			$array = xmlToArray($result);
-			if( isset( $array["gwrcmd"]["gdata"]["gip"]["room"] ) ){
-				$DATA = $array["gwrcmd"]["gdata"]["gip"]["room"];
-			}
-			
-			if( sizeof($DATA) > 0 ){
+			$DATA = getRoomCarouselData();
+
+			if( $DATA !== null && sizeof($DATA) > 0 ){
 				echo '<hr />';
 				echo '<h1>Scene Settings</h1>';
-				if ( isset( $DATA["rid"] ) ){ $DATA = array( $DATA ); }
 			
 				foreach($DATA as $room){
 					$toggled = 0;
@@ -807,19 +801,10 @@
 					}
 					
 					echo '<div class="room-devices room-devices-toggled-'.$toggled.'">';
-						//check if Device(s) in scene
-						if(  is_array($room["device"]) ){
-							$device = (array)$room["device"];
-							if( isset($device["did"]) ){
-								renderDevice( $device, $toggled, $room['rid'] );
-							}else{	
-								for( $x = 0; $x < sizeof($device); $x++ ){
-									if( isset($device[$x]) && is_array($device[$x]) && ! empty($device[$x]) ){
-										renderDevice( $device[$x], $toggled,  $room['rid']);
-									}
-								}
-							}
-						}
+						$roomDevices = extractDevicesFromRoom($room);
+					foreach($roomDevices as $dev){
+						renderDevice( $dev, $toggled, $room['rid'] );
+					}
 					
 					echo '</div>';
 					echo '</div>'; //end of render room div

@@ -303,46 +303,20 @@
 					<td>
 						<select size="9" class="available" name="DEVICE_AVAILABLE" multiple>
 						<?php
-							$CMD = "cmd=GWRBatch&data=<gwrcmds><gwrcmd><gcmd>RoomGetCarousel</gcmd><gdata><gip><version>1</version><token>".TOKEN."</token><fields>name,image,imageurl,control,power,product,class,realtype,status</fields></gip></gdata></gwrcmd></gwrcmds>&fmt=xml";
-							$result = getCurlReturn($CMD);
-							$array = xmlToArray($result);
-							if( isset( $array["gwrcmd"]["gdata"]["gip"]["room"] ) ){
-								$DATA = $array["gwrcmd"]["gdata"]["gip"]["room"];
-							}
-							
-							if( sizeof($DATA) > 0 ){
-								if ( isset( $DATA["rid"] ) ){ $DATA = array( $DATA ); }
-								
+							$DATA = getRoomCarouselData();
+							if( $DATA !== null && sizeof($DATA) > 0 ){
 								foreach($DATA as $room){
 									echo '<optgroup label="Room - '.$room["name"].'">';
-									//echo '<option data-device-type="room" data-device-id="'.$room["rid"].'" data-room-name="'.$room["name"].'">'    .  $room["name"] .    '</option>';
-									if(  is_array($room["device"]) ){
-										$device = (array)$room["device"];
-										if( isset($device["did"]) ){
-											//$DEVICES[] = "<option data-device-type='light' data-device-id='".$room["device"]["did"]."' data-room-name='".$room["name"]."'>".  $room["device"]["name"] ."</option>";
-
-											if( isset($task) && isset($task["devices"]) && is_array($task["devices"]) && in_array($device['did'], $task["devices"]) ){
-												$selected.= '<option value="'.$device['did'].'" selected>'.$device['prodtype'].' - '.$device['name'].'</option>';
-											}else{
-												echo '<option value="'.$device['did'].'">'.$device['prodtype'].' - '.$device['name'].'</option>';
-											}
-										}else{	
-											for( $x = 0; $x < sizeof($device); $x++ ){
-												if( isset($device[$x]) && is_array($device[$x]) && ! empty($device[$x]) ){
-													//$DEVICES[] = '<option data-device-type="light" data-device-id="'.$device[$x]["did"].'" data-room-name="'.$room["name"].'">'. $device[$x]["name"] ."</option>";
-													if( isset($task) && isset($task["devices"]) && is_array($task["devices"]) && in_array($device[$x]['did'], $task["devices"]) ){
-														$selected.= '<option value="'.$device[$x]['did'].'" selected>'.$device[$x]['prodtype'].' - '.$device[$x]['name'].'</option>';
-													}else{
-														echo '<option value="'.$device[$x]['did'].'">'.$device[$x]['prodtype'].' - '.$device[$x]['name'].'</option>';
-													}
-													
-												}
-											}
+									$roomDevices = extractDevicesFromRoom($room);
+									foreach($roomDevices as $dev){
+										if( isset($task) && isset($task["devices"]) && is_array($task["devices"]) && in_array($dev['did'], $task["devices"]) ){
+											$selected.= '<option value="'.$dev['did'].'" selected>'.$dev['prodtype'].' - '.$dev['name'].'</option>';
+										}else{
+											echo '<option value="'.$dev['did'].'">'.$dev['prodtype'].' - '.$dev['name'].'</option>';
 										}
 									}
 									echo '</optgroup>';
 								}
-								
 							}
 						?>
 						</select>

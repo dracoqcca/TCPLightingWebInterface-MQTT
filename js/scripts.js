@@ -17,8 +17,7 @@ $(function(){
 					$(this).slider('value', ui.value );
 				});
 			});
-			$.get("mqttstate.php");
-		}
+			}
 	});
 
 	$('.device-slider').slider({
@@ -36,8 +35,7 @@ $(function(){
 			$.get("api.php?fx=dim&type=device&uid=" + $(this).attr('data-device-id') + "&val=" + ui.value, function( data ) {
 			  console.log( data );
 			});
-			$.get("mqttstate.php");
-		},
+			},
 		slide: function( event, ui ) {
 			if( $(this).parent().hasClass('light-on') ){
 				$(this).parent().css('background-color', 'rgba(255,255,0,' + ( ui.value / 100 ) + ')');
@@ -55,8 +53,7 @@ $(function(){
 			  //console.log( data );
 			  //set every slider to the new value
 			});
-			$.get("mqttstate.php");
-		}
+			}
 	});
 
 	$('button.onOffToggleButton').click(function(event){
@@ -80,7 +77,6 @@ $(function(){
 				}
 			});
 		});
-		$.get("mqttstate.php");
 	});
 
 	$('button.onOffDeviceToggleButton').click(function(event){
@@ -102,7 +98,6 @@ $(function(){
 				$(light).parents('.device').css('background-color','transparent');
 			}
 		});
-		$.get("mqttstate.php");
 	});
 
 	$('button.onOffHouseToggleButton').click(function(event){
@@ -125,7 +120,6 @@ $(function(){
 				}
 			});
 		});
-		$.get("mqttstate.php");
 	});
 	
 	$('.runScene').click(function(event){
@@ -137,7 +131,6 @@ $(function(){
 		$.get( "api.php?fx=scene&type=" + mode + "&uid=" + sid, function( data ) {
 			console.log( data );
 		});
-		$.get("mqttstate.php");
 	});
 	
 	

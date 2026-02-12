@@ -324,27 +324,9 @@ if( isset($_REQUEST['rid']) && $_REQUEST['rid'] != "" ){
 		</form>
 			<?php
 			echo '<div class="roomContainer" data-room-id="'. $rid.'" style="margin-top:20px;">';
-			$DEVICES = array();
-			$deviceCount = 0;	
-			if( ! is_array($room["device"]) ){
-				
-			}else{
-				$device = (array)$room["device"];
-				if( isset($device["did"]) ){
-					//item is singular device
-					$DEVICES[] = $room["device"];
-					$deviceCount++;
-				}else{
-				
-					for( $x = 0; $x < sizeof($device); $x++ ){
-						if( isset($device[$x]) && is_array($device[$x]) && ! empty($device[$x]) ){
-							$DEVICES[] = $device[$x];
-							$deviceCount++;
-						}
-					}
-				}
-			}
-			
+			$DEVICES = extractDevicesFromRoom($room);
+			$deviceCount = sizeof($DEVICES);
+
 			if( sizeof($DEVICES) > 0 ){
 				echo '<div class="devices">';
 					echo '<p>Room Devices:</p>';

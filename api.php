@@ -165,11 +165,7 @@
 			
 			$THE_ROOM = null;
 			
-			//Get State of System Data
-			$CMD = "cmd=GWRBatch&data=<gwrcmds><gwrcmd><gcmd>RoomGetCarousel</gcmd><gdata><gip><version>1</version><token>".TOKEN."</token><fields>name,image,imageurl,control,power,product,class,realtype,status</fields></gip></gdata></gwrcmd></gwrcmds>&fmt=xml";
-			$result = getCurlReturn($CMD);
-			$array = xmlToArray($result);
-			$DATA = $array["gwrcmd"]["gdata"]["gip"]["room"];
+			$DATA = getRoomCarouselData();
 			
 				foreach($DATA as $room){
 						if(  is_array($room["device"]) && $room["rid"] == $UID ){
@@ -519,23 +515,13 @@
 			
 			$sceneDeviceObjectsON = 0;
 			
-			$CMD = "cmd=GWRBatch&data=<gwrcmds><gwrcmd><gcmd>RoomGetCarousel</gcmd><gdata><gip><version>1</version><token>".TOKEN."</token><fields>name,image,imageurl,control,power,product,class,realtype,status</fields></gip></gdata></gwrcmd></gwrcmds>&fmt=xml";
-			$result = getCurlReturn($CMD);
-			$array = xmlToArray($result);
-			if( !isset($array["gwrcmd"]) ){
-				exit;
-			}
-			
+			$DATA = getRoomCarouselData();
+			if( $DATA === null ){ exit; }
+
 			$DEVICES = array();
-			if( isset( $array["gwrcmd"]["gdata"]["gip"]["room"] ) ){
-				$DATA = $array["gwrcmd"]["gdata"]["gip"]["room"];
-			}else{
-				exit;
-			}
 			$ROOMS  = array();
 			$BRIDGE = array();
 			if( sizeof($DATA) > 0 ){
-				if ( isset( $DATA["rid"] ) ){ $DATA = array( $DATA ); }
 				
 				
 				foreach($DATA as $room){

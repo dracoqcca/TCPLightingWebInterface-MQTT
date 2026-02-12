@@ -5,44 +5,18 @@
 	flush ();  
 	
 	function getDeviceIDs(){
-		//get system state
-		$CMD = "cmd=GWRBatch&data=<gwrcmds><gwrcmd><gcmd>RoomGetCarousel</gcmd><gdata><gip><version>1</version><token>".TOKEN."</token><fields>name,image,imageurl,control,power,product,class,realtype,status</fields></gip></gdata></gwrcmd></gwrcmds>&fmt=xml";
-		$result = getCurlReturn($CMD);
-		$array = xmlToArray($result);
-		if( !isset($array["gwrcmd"]) ){
-			exit;
-		}
-		
-		$DEVICES = array();
-		if( isset( $array["gwrcmd"]["gdata"]["gip"]["room"] ) ){
-			$DATA = $array["gwrcmd"]["gdata"]["gip"]["room"];
-		}else{
-			exit;
-		}
-		
-		if( sizeof($DATA) > 0 ){
-			if ( isset( $DATA["rid"] ) ){ $DATA = array( $DATA ); }
-			foreach($DATA as $room){
-				if( isset($room['rid'] ) ){
-					if( ! is_array($room["device"]) ){
-					
-					}else{
-						$device = (array)$room["device"];
-						if( isset($device["did"]) ){
-							$DEVICES[] = $device["did"];
-						}else{
-							for( $x = 0; $x < sizeof($device); $x++ ){
-								if( isset($device[$x]) && is_array($device[$x]) && ! empty($device[$x]) ){
-									$DEVICES[] = $device[$x]["did"];
-								}
-							}
-						}
-					}
-					
+		$DATA = getRoomCarouselData();
+		if( $DATA === null ){ exit; }
+		$DEVICE_IDS = array();
+		foreach($DATA as $room){
+			if( isset($room['rid']) ){
+				$devices = extractDevicesFromRoom($room);
+				foreach($devices as $dev){
+					$DEVICE_IDS[] = $dev["did"];
 				}
 			}
 		}
-		return $DEVICES;
+		return $DEVICE_IDS;
 	}
 	
 	$BASE_DEVICES = getDeviceIDs();

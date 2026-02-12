@@ -169,32 +169,15 @@ $(function(){
 <select id="builder">
 	<option>Select a Device | Room | Scene</option>
 <?php
-//Get State of System Data
-	$CMD = "cmd=GWRBatch&data=<gwrcmds><gwrcmd><gcmd>RoomGetCarousel</gcmd><gdata><gip><version>1</version><token>".TOKEN."</token><fields>name,image,imageurl,control,power,product,class,realtype,status</fields></gip></gdata></gwrcmd></gwrcmds>&fmt=xml";
-	$result = getCurlReturn($CMD);
-	$array = xmlToArray($result);
-	if( isset( $array["gwrcmd"]["gdata"]["gip"]["room"] ) ){
-		$DATA = $array["gwrcmd"]["gdata"]["gip"]["room"];
-	}
-	
-	if( sizeof($DATA) > 0 ){
-		if ( isset( $DATA["rid"] ) ){ $DATA = array( $DATA ); }
+	$DATA = getRoomCarouselData();
+	$DEVICES = array();
+	if( $DATA !== null && sizeof($DATA) > 0 ){
 		echo '<optgroup label="Rooms">';
 		foreach($DATA as $room){
 			echo '<option data-device-type="room" data-device-id="'.$room["rid"].'" data-room-name="'.$room["name"].'">'    .  $room["name"] .    '</option>';
-			if( ! is_array($room["device"]) ){
-				
-			}else{
-				$device = (array)$room["device"];
-				if( isset($device["did"]) ){
-					$DEVICES[] = "<option data-device-name='".$room["device"]["name"]."' data-device-type='light' data-device-id='".$room["device"]["did"]."' data-room-name='".$room["name"]."'>".  $room["device"]["name"] ."</option>";
-				}else{	
-					for( $x = 0; $x < sizeof($device); $x++ ){
-						if( isset($device[$x]) && is_array($device[$x]) && ! empty($device[$x]) ){
-							$DEVICES[] = '<option  data-device-name="'.$device[$x]["name"].'" data-device-type="light" data-device-id="'.$device[$x]["did"].'" data-room-name="'.$room["name"].'">'. $device[$x]["name"] ."</option>";
-						}
-					}
-				}
+			$roomDevices = extractDevicesFromRoom($room);
+			foreach($roomDevices as $dev){
+				$DEVICES[] = '<option data-device-name="'.$dev["name"].'" data-device-type="light" data-device-id="'.$dev["did"].'" data-room-name="'.$room["name"].'">'. $dev["name"] ."</option>";
 			}
 		}
 		echo '</optgroup>';
