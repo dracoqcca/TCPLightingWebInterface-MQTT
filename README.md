@@ -35,7 +35,7 @@ Home Assistant  <── MQTT Discovery ─────────────�
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/sktaylortrash/TCPLightingWebInterface-MQTT.git
+git clone https://github.com/dracoqcca/TCPLightingWebInterface-MQTT.git
 cd TCPLightingWebInterface-MQTT
 ```
 
