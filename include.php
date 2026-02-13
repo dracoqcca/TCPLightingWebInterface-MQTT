@@ -174,10 +174,22 @@ function pageHeader($title){
 }
 
 function pageFooter(){
+	$settings = getSettings();
+	$autoReboot = isset($settings["autoRebootEnabled"]) ? $settings["autoRebootEnabled"] : true;
 ?>
-	<div id="toolBar"><a href="scheduler.php">Lighting Scheduler</a> | <a href="createDevice.php">Create Virtual Device</a> | <a href="setDateTime.php">Set Bridge Date Time</a> | <a href="discoverBulbs.php">Search for New Bulbs. (Beta)</a> </div>
+	<div id="toolBar"><a href="scheduler.php">Lighting Scheduler</a> | <a href="createDevice.php">Create Virtual Device</a> | <a href="setDateTime.php">Set Bridge Date Time</a> | <a href="discoverBulbs.php">Search for New Bulbs. (Beta)</a> | <a href="#" id="autoRebootToggle">Auto-Reboot: <span id="autoRebootStatus"><?php echo $autoReboot ? "ON" : "OFF"; ?></span></a></div>
+	<script>
+	$('#autoRebootToggle').on('click', function(e){
+		e.preventDefault();
+		var isOn = $('#autoRebootStatus').text() === 'ON';
+		$.get('api.php', {fx:'setAutoReboot', val: isOn ? '0' : '1'}, function(resp){
+			var data = typeof resp === 'string' ? JSON.parse(resp) : resp;
+			$('#autoRebootStatus').text(data.autoRebootEnabled ? 'ON' : 'OFF');
+		});
+	});
+	</script>
 </body>
-</html>	
+</html>
 	<?php
 }
 
@@ -195,6 +207,20 @@ function SCHEDLog($string){
 	if( LOG_ACTIONS == 1 ){
 		file_put_contents(  LOG_DIR . DIRECTORY_SEPARATOR . "Schedule-Actioned.log", date('Y-m-d H:i:s '). $string . "\n", FILE_APPEND | LOCK_EX);
 	}
+}
+
+function getSettings(){
+	$file = dirname(__FILE__) . DIRECTORY_SEPARATOR . "settings.json";
+	if(!file_exists($file)){ return array("autoRebootEnabled" => true); }
+	$data = json_decode(file_get_contents($file), true);
+	return is_array($data) ? $data : array("autoRebootEnabled" => true);
+}
+
+function saveSetting($key, $value){
+	$file = dirname(__FILE__) . DIRECTORY_SEPARATOR . "settings.json";
+	$settings = getSettings();
+	$settings[$key] = $value;
+	file_put_contents($file, json_encode($settings), LOCK_EX);
 }
 
 function BridgeErrorLog($string){

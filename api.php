@@ -448,6 +448,13 @@
 			exit;
 		}
 		
+		if($function == "setAutoReboot"){
+			$enabled = ($val === "1" || $val === "true") ? true : false;
+			saveSetting("autoRebootEnabled", $enabled);
+			echo json_encode(array("success" => 1, "autoRebootEnabled" => $enabled));
+			exit;
+		}
+
 		$sceneDevices = array("rooms"=> array(), "devices" => array(), "count" => 0);
 		$sceneList = array();
 		
@@ -643,6 +650,8 @@
 			
 			
 			if( $function == "getState"  ){
+				$settings = getSettings();
+				$BRIDGE["settings"] = $settings;
 				header('Content-Type: application/json');
 				echo json_encode( $BRIDGE );
 				exit;

@@ -38,6 +38,10 @@ class Config:
         self.hass_online_topic = os.environ.get("HASS_ONLINE_TOPIC", "hass/status")
         self.api_base_url = os.environ.get("API_BASE_URL", "")
         self.poll_interval = int(os.environ.get("POLL_INTERVAL", "5"))
+        self.bridge_ip = os.environ.get("BRIDGE_IP", "")
+        self.bridge_ssh_password = os.environ.get("BRIDGE_SSH_PASSWORD", "")
+        self.reboot_threshold = int(os.environ.get("BRIDGE_REBOOT_THRESHOLD", "3"))
+        self.reboot_cooldown = int(os.environ.get("BRIDGE_REBOOT_COOLDOWN", "300"))
 
         missing = []
         if not self.broker:
@@ -79,6 +83,8 @@ class MQTTBridge:
         self._stop_event = threading.Event()
         self._state_cache = None  # latest full state from API
         self._lock = threading.Lock()
+        self._consecutive_failures = 0
+        self._last_reboot_time = 0.0
 
         self.client = mqtt.Client(client_id=config.client_id, clean_session=True)
         if config.username:
@@ -257,13 +263,25 @@ class MQTTBridge:
         url = f"{self.cfg.api_base_url}/api.php?fx=getState"
         try:
             r = requests.get(url, timeout=10)
+            if r.status_code >= 500:
+                log.warning("API returned %d", r.status_code)
+                self._consecutive_failures += 1
+                self._maybe_reboot_bridge()
+                return
             if r.status_code != 200:
                 log.warning("API returned %d", r.status_code)
-                return
+                return  # 4xx etc — don't count toward reboot
             state = r.json()
-        except (requests.RequestException, ValueError) as e:
+        except requests.RequestException as e:
             log.error("Failed to fetch state: %s", e)
+            self._consecutive_failures += 1
+            self._maybe_reboot_bridge()
             return
+        except ValueError as e:
+            log.error("Failed to parse state JSON: %s", e)
+            return  # Bad JSON — don't count toward reboot
+
+        self._consecutive_failures = 0
 
         with self._lock:
             self._state_cache = state
@@ -294,6 +312,56 @@ class MQTTBridge:
         # Publish HA discovery on first poll (when differ returns all devices)
         if len(changed) == len(all_devices) and all_devices:
             self._publish_discovery()
+
+    def _maybe_reboot_bridge(self):
+        """Check if conditions are met to reboot the physical TCP bridge."""
+        if not self.cfg.bridge_ssh_password or not self.cfg.bridge_ip:
+            return  # Feature disabled
+
+        # Check web UI toggle from cached state
+        with self._lock:
+            state = self._state_cache
+        if state and not state.get("settings", {}).get("autoRebootEnabled", True):
+            return  # Disabled via web UI
+
+        if self._consecutive_failures < self.cfg.reboot_threshold:
+            return  # Not enough failures yet
+
+        now = time.time()
+        elapsed = now - self._last_reboot_time
+        if elapsed < self.cfg.reboot_cooldown:
+            log.warning(
+                "Bridge reboot on cooldown (%ds remaining)",
+                int(self.cfg.reboot_cooldown - elapsed),
+            )
+            return
+
+        self._reboot_bridge()
+
+    def _reboot_bridge(self):
+        """SSH into the physical TCP bridge and reboot it."""
+        import paramiko  # lazy import — only needed when rebooting
+
+        log.warning(
+            "Rebooting TCP bridge at %s after %d consecutive failures",
+            self.cfg.bridge_ip, self._consecutive_failures,
+        )
+        try:
+            ssh = paramiko.SSHClient()
+            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            ssh.connect(
+                self.cfg.bridge_ip,
+                username="root",
+                password=self.cfg.bridge_ssh_password,
+                timeout=10,
+            )
+            ssh.exec_command("/sbin/reboot")
+            ssh.close()
+            self._last_reboot_time = time.time()
+            self._consecutive_failures = 0
+            log.warning("Reboot command sent to TCP bridge")
+        except Exception as e:
+            log.error("Failed to SSH reboot bridge: %s", e)
 
     def _publish_discovery(self):
         """Publish Home Assistant MQTT discovery configs for all devices."""
