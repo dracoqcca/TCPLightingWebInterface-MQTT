@@ -7,7 +7,7 @@
 
 include "include.php";
 
-$CMD = "cmd=RoomGetList&data=<gip><version>1</version><token>".TOKEN."</token></gip>";
+$CMD = buildGipCommand("RoomGetList", "");
 $result = getCurlReturn($CMD);
 $array = xmlToArray($result);
 $ROOM_COLOURS = array();
@@ -38,7 +38,7 @@ if (strtoupper($_SERVER['REQUEST_METHOD']) == 'GET'){
 		$did = $_REQUEST['delete'];
 		$fullDelete =  $_REQUEST['fullDelete'];
 
-		$CMD = "cmd=DeviceDelete&data=<gip><version>1</version><token>".TOKEN."</token><did>".$did."</did>".($fullDelete == 1 ? '<full>1</full>' : '')."</gip>";
+		$CMD = buildGipCommand("DeviceDelete", "<did>".$did."</did>".($fullDelete == 1 ? '<full>1</full>' : ''));
 		$result = getCurlReturn($CMD);
 		$array = xmlToArray($result);
 
@@ -74,7 +74,7 @@ if (strtoupper($_SERVER['REQUEST_METHOD']) == 'POST'){
 			}
 		}
 
-		$CMD = "cmd=DeviceSetInfo&data=<gip><version>1</version><token>".TOKEN."</token><did>".$did."</did><name>".$name."</name>".($color != "" ? "<color>".$color."</color>" : "").($imdata != "" ? "<image>".$imdata."</image>" : "").( $remote != ""  ? "<other><rcgroup>".$remote."</rcgroup></other>" : "" )."</gip>";
+		$CMD = buildGipCommand("DeviceSetInfo", "<did>".$did."</did><name>".$name."</name>".($color != "" ? "<color>".$color."</color>" : "").($imdata != "" ? "<image>".$imdata."</image>" : "").($remote != "" ? "<other><rcgroup>".$remote."</rcgroup></other>" : ""));
 
 		$result = getCurlReturn($CMD);
 		$array = xmlToArray($result);
@@ -87,7 +87,7 @@ if (strtoupper($_SERVER['REQUEST_METHOD']) == 'POST'){
 		$name =  $_POST['name'];
 		$color = $_POST['color'];
 
-		$CMD = "cmd=RoomSetInfo&data=<gip><version>1</version><token>".TOKEN."</token><rid>".$rid."</rid><name>".$name."</name>".($color != "" ? "<colorid>".$color."</colorid>" : "")."</gip>";
+		$CMD = buildGipCommand("RoomSetInfo", "<rid>".$rid."</rid><name>".$name."</name>".($color != "" ? "<colorid>".$color."</colorid>" : ""));
 		$result = getCurlReturn($CMD);
 		$array = xmlToArray($result);
 
@@ -104,7 +104,7 @@ if( isset($_REQUEST['did']) && $_REQUEST['did'] != "" ){
 	<?php
 	echo '<div class="roomContainer" style="background-color: #fff; padding: 20px; border: 1px solid #000;">';
 
-	$CMD = "cmd=DeviceGetInfo&data=<gip><version>1</version><token>".TOKEN."</token><did>".$did."</did><fields>name,power,product,class,image,control,realtype,other,status</fields></gip>";
+	$CMD = buildGipCommand("DeviceGetInfo", "<did>".$did."</did><fields>name,power,product,class,image,control,realtype,other,status</fields>");
 
 	$result = getCurlReturn($CMD);
 	$array = xmlToArray($result);
@@ -199,7 +199,7 @@ if( isset($_REQUEST['rid']) && $_REQUEST['rid'] != "" ){
 	$rid = $_REQUEST['rid'];
 	pageHeader("TCP Lighting Controller - Room Controller - Room: ".$rid);
 
-	$CMD = "cmd=RoomGetInfoAll&data=<gip><version>1</version><token>".TOKEN."</token><rid>".$rid."</rid><fields>name,power,product,class,image,imageurl,control,other</fields></gip>";
+	$CMD = buildGipCommand("RoomGetInfoAll", "<rid>".$rid."</rid><fields>name,power,product,class,image,imageurl,control,other</fields>");
 
 	$result = getCurlReturn($CMD);
 	$room = xmlToArray($result);

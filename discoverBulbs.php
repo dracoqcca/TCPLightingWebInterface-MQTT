@@ -27,7 +27,7 @@
 	
 		echo "<p>Current State: ".sizeof($BASE_DEVICES)." Devices.</p>";
 		echo "<p>Searching for new devices...</p>";
-		$CMD = "cmd=GatewayInclusionStart&data=<gip><version>1</version><token>".TOKEN."</token></gip>";
+		$CMD = buildGipCommand("GatewayInclusionStart", "");
 		$result = getCurlReturn($CMD);
 		
 		$array = xmlToArray($result);
@@ -36,7 +36,7 @@
 		echo "<p>";
 		for( $x = 0; $x < 10; $x ++ ){
 		
-			$CMD = "cmd=GatewayInclusionProgressGet&data=<gip><version>1</version><token>".TOKEN."</token></gip>";
+			$CMD = buildGipCommand("GatewayInclusionProgressGet", "");
 			$result = getCurlReturn($CMD);
 			
 			$array = xmlToArray($result);
@@ -51,7 +51,7 @@
 			ob_flush();
 			flush (); 
 			
-			$CMD = "cmd=GatewayInclusionStop&data=<gip><version>1</version><token>".TOKEN."</token></gip>";
+			$CMD = buildGipCommand("GatewayInclusionStop", "");
 			$result = getCurlReturn($CMD);
 			$array = xmlToArray($result);
 			

@@ -74,24 +74,22 @@
 			}
 						
 
-			$cmd = "cmd=SceneCreateEdit&data=<gip><version>1</version><token>".TOKEN."</token>".$sceneID."<active>".$active."</active>";
-			
-			$cmd .= "<name>".$name."</name>";
-			$cmd .= "<type>".$type."</type>";
-			$cmd .= "<islocal>1</islocal>"; //unknown...
+			$innerXml = $sceneID."<active>".$active."</active>";
+			$innerXml .= "<name>".$name."</name>";
+			$innerXml .= "<type>".$type."</type>";
+			$innerXml .= "<islocal>1</islocal>";
 			if( $schedule == 1){
-				$cmd .= "<every>".$every."</every>";
+				$innerXml .= "<every>".$every."</every>";
 				if( $startTime !=  '-1' ){
-					$cmd .= "<starttime>".$startTime."</starttime>";
+					$innerXml .= "<starttime>".$startTime."</starttime>";
 				}
-				
 				if( $stopTime != '-1' ){
-					$cmd .= "<stoptime>".$stopTime."</stoptime>";
+					$innerXml .= "<stoptime>".$stopTime."</stoptime>";
 				}
 			}
-			$cmd .= "<icon>".$icon."</icon>";
-			$cmd .= $deviceStr;
-			$cmd.= "</gip>";
+			$innerXml .= "<icon>".$icon."</icon>";
+			$innerXml .= $deviceStr;
+			$cmd = buildGipCommand("SceneCreateEdit", $innerXml);
 			
 		
 			
@@ -107,7 +105,7 @@
 		
 		if( $action == "delete"){
 			//<gip><version>1</version><token>%s</token><sid>%s</sid></gip>
-			$CMD = "cmd=SceneDelete&data=<gip><version>1</version><token>".TOKEN."</token><sid>".$sceneID."</sid></gip>"; 
+			$CMD = buildGipCommand("SceneDelete", "<sid>".$sceneID."</sid>"); 
 			$result = getCurlReturn($CMD);
 			$array = xmlToArray($result);
 			ob_clean();
@@ -441,7 +439,7 @@
 	echo '<div class="roomContainer" style="padding: 20px;">';
 	echo '<h2>Scenes / Smart Control</h2>';
 	
-	$CMD = "cmd=SceneGetListDetails&data=<gip><version>1</version><token>".TOKEN."</token><bigicon>1</bigicon></gip>";
+	$CMD = buildGipCommand("SceneGetListDetails", "<bigicon>1</bigicon>");
 	$result = getCurlReturn($CMD);
 	$array = xmlToArray($result);
 	
@@ -487,14 +485,10 @@
             <div class="clear"></div>
            
 			<?php
-				$devices = array();
 				$scene = $scenes[$x];
-				if(  isset( $scenes[$x]['device'][0]["id"] ) ){
-					foreach(  $scenes[$x]['device'] as $d ){
-						$devices[] = $d["id"];
-					}
-				}else{
-					$devices[] = $scenes[$x]['device']["id"];
+				$devices = array();
+				foreach(extractSceneDevices($scenes[$x]) as $d){
+					$devices[] = $d["id"];
 				}
 			}
 		}

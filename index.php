@@ -101,7 +101,7 @@ if( TOKEN != "" ){
 	echo '<div id="scenes" class="roomContainer">';
 		echo '<div class="room-color" style="background-color: #ccc;"><div class="room-name">Scenes</div></div>';
 
-		$CMD = "cmd=SceneGetListDetails&data=<gip><version>1</version><token>".TOKEN."</token><bigicon>1</bigicon></gip>";
+		$CMD = buildGipCommand("SceneGetListDetails", "<bigicon>1</bigicon>");
 		$result = getCurlReturn($CMD);
 		$array = xmlToArray($result);
 		$scenes = $array["scene"];

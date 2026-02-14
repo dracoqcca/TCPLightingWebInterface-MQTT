@@ -35,42 +35,35 @@
 
 	APILog('- Function: '.$function." Type: " . $type . " ID : " . $UID . " Value: " . $val);
 
-	$val = $val < 0 ? 0 : $val;
-	$val = $val > 100 ? 100 : $val;
+	$val = clampBrightness($val);
 
 	/*Function to facilitate device dimming on / off */
 	function dimOnOff($deviceInfoArray, $onOff ){
 		//store original value
 		$olevel = $deviceInfoArray["level"];
+		$did = $deviceInfoArray['did'];
 		//check state?
 		if( $onOff == 1){
 			//fade on,
-			$CMD = "cmd=DeviceSendCommand&data=<gip><version>1</version><token>".TOKEN."</token><did>".$deviceInfoArray['did']."</did><value>0</value><type>level</type></gip>";
-			$result = getCurlReturn($CMD);
+			$result = getCurlReturn(buildDeviceCommand("DeviceSendCommand", $did, 0, "level"));
 			//set on
-			$CMD = "cmd=DeviceSendCommand&data=<gip><version>1</version><token>".TOKEN."</token><did>".$deviceInfoArray['did']."</did><value>1</value></gip>";
-			$result = getCurlReturn($CMD);
+			$result = getCurlReturn(buildDeviceCommand("DeviceSendCommand", $did, 1));
 			//dim to olevel
-			$CMD = "cmd=DeviceSendCommand&data=<gip><version>1</version><token>".TOKEN."</token><did>".$deviceInfoArray['did']."</did><value>".$olevel."</value><type>level</type></gip>";
-			$result = getCurlReturn($CMD);
+			$result = getCurlReturn(buildDeviceCommand("DeviceSendCommand", $did, $olevel, "level"));
 		}else{
 			//fade off
-			$CMD = "cmd=DeviceSendCommand&data=<gip><version>1</version><token>".TOKEN."</token><did>".$deviceInfoArray['did']."</did><value>0</value><type>level</type></gip>";
-			$result = getCurlReturn($CMD);
+			$result = getCurlReturn(buildDeviceCommand("DeviceSendCommand", $did, 0, "level"));
 			//set off
-			$CMD = "cmd=DeviceSendCommand&data=<gip><version>1</version><token>".TOKEN."</token><did>".$deviceInfoArray['did']."</did><value>0</value></gip>";
-			$result = getCurlReturn($CMD);
+			$result = getCurlReturn(buildDeviceCommand("DeviceSendCommand", $did, 0));
 			//dim to olevel
-			$CMD = "cmd=DeviceSendCommand&data=<gip><version>1</version><token>".TOKEN."</token><did>".$deviceInfoArray['did']."</did><value>".$olevel."</value><type>level</type></gip>";
-			$result = getCurlReturn($CMD);
+			$result = getCurlReturn(buildDeviceCommand("DeviceSendCommand", $did, $olevel, "level"));
 
 		}
 		return $result;
 	}
 
 	function deviceOn($UID){
-		$CMD = "cmd=DeviceSendCommand&data=<gip><version>1</version><token>".TOKEN."</token><did>".$UID."</did><value>1</value></gip>";
-		$result = getCurlReturn($CMD);
+		$result = getCurlReturn(buildDeviceCommand("DeviceSendCommand", $UID, 1));
 		$array = xmlToArray($result);
 	}
 
@@ -103,8 +96,7 @@
 						echo json_encode( array("toggle" => $val, "device" => $UID, "return" => "DimFade") );
 
 					}else{
-						$CMD = "cmd=DeviceSendCommand&data=<gip><version>1</version><token>".TOKEN."</token><did>".$UID."</did><value>".$val."</value></gip>";
-						$result = getCurlReturn($CMD);
+						$result = getCurlReturn(buildDeviceCommand("DeviceSendCommand", $UID, $val));
 						$array = xmlToArray($result);
 						echo json_encode( array("toggle" => $val, "device" => $UID, "return" => $array) );
 					}
@@ -117,18 +109,15 @@
 						deviceOn( $UID );
 					}
 
-					$CMD = "cmd=DeviceSendCommand&data=<gip><version>1</version><token>".TOKEN."</token><did>".$UID."</did><value>".$val."</value><type>level</type></gip>";
-					$result = getCurlReturn($CMD);
+					$result = getCurlReturn(buildDeviceCommand("DeviceSendCommand", $UID, $val, "level"));
 					$array = xmlToArray($result);
 					echo json_encode( array("dim" => $val, "device" => $UID, "return" => $array) );
 				break;
 
 
 				case "dimby":
-					$darkenTo = $THE_DEVICE['level'] - $val;
-					if( $darkenTo <= 0 ){ $darkenTo = 0; }
-					$CMD = "cmd=DeviceSendCommand&data=<gip><version>1</version><token>".TOKEN."</token><did>".$UID."</did><value>".$darkenTo."</value><type>level</type></gip>";
-					$result = getCurlReturn($CMD);
+					$darkenTo = clampBrightness($THE_DEVICE['level'] - $val);
+					$result = getCurlReturn(buildDeviceCommand("DeviceSendCommand", $UID, $darkenTo, "level"));
 					$array = xmlToArray($result);
 					echo json_encode( array("dimby" => $val, "device" => $UID, "return" => $array) );
 
@@ -141,10 +130,8 @@
 						deviceOn( $UID );
 					}
 
-					$brightenTo = $THE_DEVICE['level'] + $val;
-					if( $brightenTo > 100 ){ $brightenTo = 100; }
-					$CMD = "cmd=DeviceSendCommand&data=<gip><version>1</version><token>".TOKEN."</token><did>".$UID."</did><value>".$brightenTo."</value><type>level</type></gip>";
-					$result = getCurlReturn($CMD);
+					$brightenTo = clampBrightness($THE_DEVICE['level'] + $val);
+					$result = getCurlReturn(buildDeviceCommand("DeviceSendCommand", $UID, $brightenTo, "level"));
 					$array = xmlToArray($result);
 					echo json_encode( array("brightenby" => $val, "device" => $UID, "return" => $array) );
 
@@ -217,25 +204,19 @@
 
 					if( $tval == 1){
 						//fade on --ensure off?
-						$CMD = "cmd=RoomSendCommand&data=<gip><version>1</version><token>".TOKEN."</token><rid>".$UID."</rid><value>0</value><type>level</type></gip>";
-						$result = getCurlReturn($CMD);
+						$result = getCurlReturn(buildRoomCommand("RoomSendCommand", $UID, 0, "level"));
 						//turn on
-						$CMD = "cmd=RoomSendCommand&data=<gip><version>1</version><token>".TOKEN."</token><rid>".$UID."</rid><value>1</value></gip>";
-						$result.= getCurlReturn($CMD);
+						$result.= getCurlReturn(buildRoomCommand("RoomSendCommand", $UID, 1));
 						//fade to 100
-						$CMD = "cmd=RoomSendCommand&data=<gip><version>1</version><token>".TOKEN."</token><rid>".$UID."</rid><value>".$roomBrightness."</value><type>level</type></gip>";
-						$result.= getCurlReturn($CMD);
+						$result.= getCurlReturn(buildRoomCommand("RoomSendCommand", $UID, $roomBrightness, "level"));
 
 					}else{
 						//fade off -- ensure already off
-						$CMD = "cmd=RoomSendCommand&data=<gip><version>1</version><token>".TOKEN."</token><rid>".$UID."</rid><value>0</value><type>level</type></gip>";
-						$result = getCurlReturn($CMD);
+						$result = getCurlReturn(buildRoomCommand("RoomSendCommand", $UID, 0, "level"));
 						//turn off
-						$CMD = "cmd=RoomSendCommand&data=<gip><version>1</version><token>".TOKEN."</token><rid>".$UID."</rid><value>0</value></gip>";
-						$result.= getCurlReturn($CMD);
+						$result.= getCurlReturn(buildRoomCommand("RoomSendCommand", $UID, 0));
 						//reset brightness to 100
-						$CMD = "cmd=RoomSendCommand&data=<gip><version>1</version><token>".TOKEN."</token><rid>".$UID."</rid><value>".$roomBrightness."</value><type>level</type></gip>";
-						$result.= getCurlReturn($CMD);
+						$result.= getCurlReturn(buildRoomCommand("RoomSendCommand", $UID, $roomBrightness, "level"));
 					}
 
 
@@ -243,8 +224,7 @@
 					$array = $result;
 
 				}else{
-					$CMD = "cmd=RoomSendCommand&data=<gip><version>1</version><token>".TOKEN."</token><rid>".$UID."</rid><value>".$val."</value></gip>";
-					$result = getCurlReturn($CMD);
+					$result = getCurlReturn(buildRoomCommand("RoomSendCommand", $UID, $val));
 					$array = xmlToArray($result);
 				}
 
@@ -253,45 +233,27 @@
 			}else if( $function == "dim"){
 
 				//turn room on if by chance it is off
-				$CMD = "cmd=RoomSendCommand&data=<gip><version>1</version><token>".TOKEN."</token><rid>".$UID."</rid><value>1</value></gip>";
-				$result = getCurlReturn($CMD);
+				$result = getCurlReturn(buildRoomCommand("RoomSendCommand", $UID, 1));
 				$array = xmlToArray($result);
 
 
 				// dim
-				$CMD = "cmd=RoomSendCommand&data=<gip><version>1</version><token>".TOKEN."</token><rid>".$UID."</rid><value>".$val."</value><type>level</type></gip>";
-
-				$result = getCurlReturn($CMD);
+				$result = getCurlReturn(buildRoomCommand("RoomSendCommand", $UID, $val, "level"));
 				$array = xmlToArray($result);
 
 			}elseif( $function == "dimby" ){
 
-				$roomBrightness = $THE_ROOM['brightness'];
-				$roomBrightness -= $val;
-				if( $roomBrightness < 0 ){ $roomBrightness = 0; }
+				$roomBrightness = clampBrightness($THE_ROOM['brightness'] - $val);
 
-
-				$CMD = "cmd=RoomSendCommand&data=<gip><version>1</version><token>".TOKEN."</token><rid>".$UID."</rid><value>".$roomBrightness."</value><type>level</type></gip>";
-
-				$result = getCurlReturn($CMD);
+				$result = getCurlReturn(buildRoomCommand("RoomSendCommand", $UID, $roomBrightness, "level"));
 				$array = xmlToArray($result);
 
 
 			}elseif( $function == "brightenby" ){
 
+				$roomBrightness = clampBrightness($THE_ROOM['brightness'] + $val);
 
-
-
-				$roomBrightness = $THE_ROOM['brightness'];
-				$roomBrightness += $val;
-
-				if( $roomBrightness > 100 ){ $roomBrightness = 100; }
-
-
-
-				$CMD = "cmd=RoomSendCommand&data=<gip><version>1</version><token>".TOKEN."</token><rid>".$UID."</rid><value>".$roomBrightness."</value><type>level</type></gip>";
-
-				$result = getCurlReturn($CMD);
+				$result = getCurlReturn(buildRoomCommand("RoomSendCommand", $UID, $roomBrightness, "level"));
 				$array = xmlToArray($result);
 
 
@@ -316,8 +278,7 @@
 
 							}else{
 
-								$CMD = "cmd=DeviceSendCommand&data=<gip><version>1</version><token>".TOKEN."</token><did>".$device['did']."</did><value>".$val."</value></gip>";
-								$result = getCurlReturn($CMD);
+								$result = getCurlReturn(buildDeviceCommand("DeviceSendCommand", $device['did'], $val));
 							}
 
 
@@ -326,33 +287,24 @@
 
 					}elseif( $function == "dim"){
 
-						$CMD = "cmd=DeviceSendCommand&data=<gip><version>1</version><token>".TOKEN."</token><did>".$device['did']."</did><value>".$val."</value><type>level</type></gip>";
-						$result = getCurlReturn($CMD);
+						$result = getCurlReturn(buildDeviceCommand("DeviceSendCommand", $device['did'], $val, "level"));
 
 						//turn light on if it is not in order to dim it
 						if( isset($device['state']) && $device['state']  == 0 ){
-							$CMD = "cmd=DeviceSendCommand&data=<gip><version>1</version><token>".TOKEN."</token><did>".$device['did']."</did><value>1</value></gip>";
-							$result = getCurlReturn($CMD);
+							$result = getCurlReturn(buildDeviceCommand("DeviceSendCommand", $device['did'], 1));
 						}
 
 
 					}elseif ( $function == "dimby" ){
 
+						$dBrightness = clampBrightness((isset($device['level']) ? $device['level'] : 100) - $val);
 
-
-						$dBrightness = isset($device['level']) ? $device['level'] : 100;
-						$dBrightness -= $val;
-						if( $dBrightness < 0 ){ $dBrightness = 0; }
-
-						$CMD = "cmd=DeviceSendCommand&data=<gip><version>1</version><token>".TOKEN."</token><did>".$device['did']."</did><value>".$dBrightness."</value><type>level</type></gip>";
-
-						$result = getCurlReturn($CMD);
+						$result = getCurlReturn(buildDeviceCommand("DeviceSendCommand", $device['did'], $dBrightness, "level"));
 						$array = xmlToArray($result);
 
 						//turn light on if it is not in order to dim it
 						if( isset($device['state']) && $device['state']  == 0 ){
-							$CMD = "cmd=DeviceSendCommand&data=<gip><version>1</version><token>".TOKEN."</token><did>".$device['did']."</did><value>1</value></gip>";
-							$result = getCurlReturn($CMD);
+							$result = getCurlReturn(buildDeviceCommand("DeviceSendCommand", $device['did'], 1));
 						}
 
 
@@ -360,18 +312,12 @@
 
 						//turn light on if it is not in order to dim it
 						if( isset($device['state']) && $device['state']  == 0 ){
-							$CMD = "cmd=DeviceSendCommand&data=<gip><version>1</version><token>".TOKEN."</token><did>".$device['did']."</did><value>1</value></gip>";
-							$result = getCurlReturn($CMD);
+							$result = getCurlReturn(buildDeviceCommand("DeviceSendCommand", $device['did'], 1));
 						}
 
+						$dBrightness = clampBrightness((isset($device['level']) ? $device['level'] : 0) + $val);
 
-						$dBrightness = isset($device['level']) ? $device['level'] : 0;
-						$dBrightness += $val;
-						if( $dBrightness > 100 ){ $dBrightness = 100; }
-
-						$CMD = "cmd=DeviceSendCommand&data=<gip><version>1</version><token>".TOKEN."</token><did>".$device['did']."</did><value>".$dBrightness."</value><type>level</type></gip>";
-
-						$result = getCurlReturn($CMD);
+						$result = getCurlReturn(buildDeviceCommand("DeviceSendCommand", $device['did'], $dBrightness, "level"));
 						$array = xmlToArray($result);
 
 
@@ -396,11 +342,11 @@
 			//Run scene
 			$CMD = "";
 			if($type == "run"){
-				$CMD = "cmd=SceneRun&data=<gip><version>1</version><token>".TOKEN."</token><sid>".$UID."</sid></gip>";
+				$CMD = buildGipCommand("SceneRun", "<sid>".$UID."</sid>");
 			}elseif( $type == "0" ){
-				$CMD = "cmd=SceneRun&data=<gip><version>1</version><token>".TOKEN."</token><sid>".$UID."</sid><val>0</val></gip>";
+				$CMD = buildGipCommand("SceneRun", "<sid>".$UID."</sid><val>0</val>");
 			}elseif( $type == "1"){
-				$CMD = "cmd=SceneRun&data=<gip><version>1</version><token>".TOKEN."</token><sid>".$UID."</sid><val>1</val></gip>";
+				$CMD = buildGipCommand("SceneRun", "<sid>".$UID."</sid><val>1</val>");
 			}elseif( $type == "delete" ){
 			}
 
@@ -428,7 +374,7 @@
 		if( $function == "getSceneState" || $function == "getState"){
 			if( $UID != "" || $function == "getState" ){
 
-				$CMD = "cmd=SceneGetListDetails&data=<gip><version>1</version><token>".TOKEN."</token><bigicon>1</bigicon></gip>";
+				$CMD = buildGipCommand("SceneGetListDetails", "<bigicon>1</bigicon>");
 				$result = getCurlReturn($CMD);
 				$array = xmlToArray($result);
 				$scenes = $array["scene"];
@@ -438,30 +384,14 @@
 						$sceneList[] = array("id" => $scenes[$x]["sid"], "name" => $scenes[$x]["name"], "icon" => $scenes[$x]["icon"], "active" =>  $scenes[$x]["active"] );
 						if( $scenes[$x]["sid"] == $UID ){
 
-							if( isset( $scenes[$x]["device"]["id"] ) ){
-
-								$sceneItemCount = $sceneItemCount + 1;
-								//one item in scene
-
-								$item = $scenes[$x]["device"];
-								if( $item["type"] == "D" ){
-									$sceneDevices["devices"][] = $item["id"];
-								}elseif( $item["type"] == "R" ){
-									$sceneDevices["rooms"][] = $item["id"];
-								}
-
-
-							}elseif( is_array(  $scenes[$x]["device"] ) ){
-								foreach( $scenes[$x]["device"] as $d ){
-									if( isset( $d["id"] ) ){
-
-										$sceneItemCount = $sceneItemCount + 1;
-										if( $d["type"] == "D" ){
-											$sceneDevices["devices"][] = $d["id"];
-										}elseif( $d["type"] == "R" ){
-											$sceneDevices["rooms"][] = $d["id"];
-										}
-
+							$sceneItems = extractSceneDevices($scenes[$x]);
+							foreach($sceneItems as $item){
+								if(isset($item["id"])){
+									$sceneItemCount++;
+									if( $item["type"] == "D" ){
+										$sceneDevices["devices"][] = $item["id"];
+									}elseif( $item["type"] == "R" ){
+										$sceneDevices["rooms"][] = $item["id"];
 									}
 								}
 							}

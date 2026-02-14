@@ -19,7 +19,7 @@ if (strtoupper($_SERVER['REQUEST_METHOD']) == 'POST'){
 			$devices.= '<device><did>'.$sel[$d].'</did></device>';
 		}
 		
-		$CMD = "cmd=DeviceVirtualCreate&data=<gip><version>1</version><token>".TOKEN."</token><color>".$colourID."</color><name>".( $name != "" ? $name : "NEW Virtual Device" )."</name>".$devices. ( $remoteControl != ""  ? "<other><rcgroup>".$remoteControl."</rcgroup></other>" : "" )."</gip>";
+		$CMD = buildGipCommand("DeviceVirtualCreate", "<color>".$colourID."</color><name>".($name != "" ? $name : "NEW Virtual Device")."</name>".$devices.($remoteControl != "" ? "<other><rcgroup>".$remoteControl."</rcgroup></other>" : ""));
 		$result = getCurlReturn($CMD);
 		$array = xmlToArray($result);
 		
@@ -109,7 +109,7 @@ echo '<div class="container" style="padding: 20px; background-color: #fff;">';
 		<form id="createDevice" method="post" action="createDevice.php">
 		
 		<?php
-			$CMD = "cmd=RoomGetList&data=<gip><version>1</version><token>".TOKEN."</token></gip>";
+			$CMD = buildGipCommand("RoomGetList", "");
 			$result = getCurlReturn($CMD);
 			$array = xmlToArray($result);
 			$ROOM_COLOURS = array();

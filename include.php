@@ -64,6 +64,36 @@ function xmlToArray($string){
 }
 
 
+function buildGipCommand($cmd, $innerXml){
+	return "cmd=".$cmd."&data=<gip><version>1</version><token>".TOKEN."</token>".$innerXml."</gip>";
+}
+
+function buildDeviceCommand($cmd, $did, $value, $type = null){
+	$xml = "<did>".$did."</did><value>".$value."</value>";
+	if($type !== null){ $xml .= "<type>".$type."</type>"; }
+	return buildGipCommand($cmd, $xml);
+}
+
+function buildRoomCommand($cmd, $rid, $value, $type = null){
+	$xml = "<rid>".$rid."</rid><value>".$value."</value>";
+	if($type !== null){ $xml .= "<type>".$type."</type>"; }
+	return buildGipCommand($cmd, $xml);
+}
+
+function clampBrightness($val){
+	return max(0, min(100, (int)$val));
+}
+
+function extractSceneDevices($scene){
+	if(isset($scene['device']['id'])){
+		return array($scene['device']);
+	}
+	if(isset($scene['device']) && is_array($scene['device'])){
+		return $scene['device'];
+	}
+	return array();
+}
+
 function extractDevicesFromRoom($room){
 	$devices = array();
 	if( !is_array($room["device"]) ){

@@ -11,7 +11,7 @@ if( TOKEN != "" ){
 		
 		if( isset($_POST) && isset($_POST['dateTime']) && $_POST['dateTime'] != "" ){
 		$time = $_POST['dateTime'];
-			$CMD = "cmd=AccountSetDateTime&data=<gip><version>1</version><token>".TOKEN."</token><datetime>".$time.":00</datetime></gip>";
+			$CMD = buildGipCommand("AccountSetDateTime", "<datetime>".$time.":00</datetime>");
 			$result = getCurlReturn($CMD);
 			$array = xmlToArray($result);
 		}

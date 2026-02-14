@@ -185,7 +185,7 @@ $(function(){
 	}
 	echo '</optgroup>';
 	
-	$CMD = "cmd=SceneGetListDetails&data=<gip><version>1</version><token>".TOKEN."</token><bigicon>1</bigicon></gip>";
+	$CMD = buildGipCommand("SceneGetListDetails", "<bigicon>1</bigicon>");
 	$result = getCurlReturn($CMD);
 	$array = xmlToArray($result);
 	$scenes = $array["scene"];
