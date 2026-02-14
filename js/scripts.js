@@ -4,7 +4,7 @@ function setDeviceLightState($device, isOn){
 	if(isOn){
 		$device.addClass('light-on');
 		var v = $device.find('.device-slider').slider("value");
-		$device.css('background-color', 'rgba(255,255,0,' + (v / 100) + ')');
+		$device.css('background-color', 'rgba(255, 200, 50,' + (v / 100) + ')');
 	}else{
 		$device.removeClass('light-on');
 		$device.css('background-color', 'transparent');
@@ -19,13 +19,20 @@ $(function(){
 		value: 50,
 		create: function( event, ui ){
 			$(this).slider("option", "value", $(this).attr('data-value') );
+			var val = $(this).slider("value");
+			$(this).after('<span class="slider-value">' + val + '%</span>');
+		},
+		slide: function( event, ui ){
+			$(this).next('.slider-value').text(ui.value + '%');
 		},
 		stop: function(event, ui) {
+			$(this).next('.slider-value').text(ui.value + '%');
 			var room = $(this).parent().parent();
 			$.get("api.php?fx=dim&type=room&uid=" + $(this).attr('data-room-id') + "&val=" + ui.value, function( data ) {
 				console.log( data );
 				$(room).find('.device-slider').each(function(){
 					$(this).slider('value', ui.value );
+					$(this).next('.slider-value').text(ui.value + '%');
 				});
 			});
 			}
@@ -37,18 +44,22 @@ $(function(){
 		max: 100,
 		create: function( event, ui ){
 			$(this).slider("option", "value", $(this).attr('data-value') );
+			var val = $(this).slider("value");
+			$(this).after('<span class="slider-value">' + val + '%</span>');
 			if( $(this).parent().hasClass('light-on') ){
-				$(this).parent().css('background-color', 'rgba(255,255,0,' + ( $(this).attr('data-value') / 100 ) + ')');
+				$(this).parent().css('background-color', 'rgba(255, 200, 50,' + ( $(this).attr('data-value') / 100 ) + ')');
 			}
 		},
 		stop: function(event, ui) {
+			$(this).next('.slider-value').text(ui.value + '%');
 			$.get("api.php?fx=dim&type=device&uid=" + $(this).attr('data-device-id') + "&val=" + ui.value, function( data ) {
 			  console.log( data );
 			});
 			},
 		slide: function( event, ui ) {
+			$(this).next('.slider-value').text(ui.value + '%');
 			if( $(this).parent().hasClass('light-on') ){
-				$(this).parent().css('background-color', 'rgba(255,255,0,' + ( ui.value / 100 ) + ')');
+				$(this).parent().css('background-color', 'rgba(255, 200, 50,' + ( ui.value / 100 ) + ')');
 			}
 		}
 	});
@@ -58,7 +69,15 @@ $(function(){
 		min: 0,
 		max: 100,
 		value: 50,
+		create: function( event, ui ){
+			var val = $(this).slider("value");
+			$(this).after('<span class="slider-value">' + val + '%</span>');
+		},
+		slide: function( event, ui ){
+			$(this).next('.slider-value').text(ui.value + '%');
+		},
 		stop: function(event, ui) {
+			$(this).next('.slider-value').text(ui.value + '%');
 			$.get("api.php?fx=dim&type=all&uid=" + $(this).attr('data-device-id') + "&val=" + ui.value, function( data ) {
 			});
 			}

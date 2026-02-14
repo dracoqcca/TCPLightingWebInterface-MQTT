@@ -197,14 +197,11 @@ function pageHeader($title){
 		<a href="#">Home</a>
 		<a href="#scenes">Scenes</a>
 	<?php } ?>
-	<a target="_blank" href="https://github.com/sktaylortrash/TCPLightingWebInterface-MQTT">GitHub Link</a>
-    <!-- <a target="_blank" href="https://github.com/bren1818/TCPLightingWebInterface/wiki">Wiki</a>-->
-    <a href="queryBuilder.php">IFTTT Query Builder</a>
+	<a target="_blank" href="https://github.com/dracoqcca/TCPLightingWebInterface-MQTT">GitHub Link</a>
 	<?php if( LOG_ACTIONS == 1 || LOG_API_CALLS == 1 || LOG_BRIDGE_ERRORS == 1){
 		echo '<a href="viewLogs.php">View Logs</a>';
 	}
 	?>
-	<div class="clear"></div>
 </div>
 	<?php
 }
