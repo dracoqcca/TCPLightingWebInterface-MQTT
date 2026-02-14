@@ -122,8 +122,7 @@ $(function(){
 			$('#sceneLights').show();
 			$('#roomLights').hide();
 			var sceneName = $(this).find('option:selected').attr('data-device-name');
-			//console.log("Type: " + type + ", id: " + id + ", scene: " + sceneName );
-			$('#appletImage').html('<img src="css/images/IFTTTAppletPhrase.png"/>');
+						$('#appletImage').html('<img src="css/images/IFTTTAppletPhrase.png"/>');
 			
 			$('#scene_command_on_1').html("Activate " + sceneName + preface +" scene" );
 			$('#scene_command_on_2').html("Turn " + sceneName + preface +  " scene ON");

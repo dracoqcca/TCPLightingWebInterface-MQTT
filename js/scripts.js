@@ -1,5 +1,16 @@
 //check API path
 
+function setDeviceLightState($device, isOn){
+	if(isOn){
+		$device.addClass('light-on');
+		var v = $device.find('.device-slider').slider("value");
+		$device.css('background-color', 'rgba(255,255,0,' + (v / 100) + ')');
+	}else{
+		$device.removeClass('light-on');
+		$device.css('background-color', 'transparent');
+	}
+}
+
 $(function(){
 	$('.room-slider').slider({
 		range: "min",
@@ -24,7 +35,6 @@ $(function(){
 		range: "min",
 		min: 0,
 		max: 100,
-		//value: $(this).attr('data-level'),
 		create: function( event, ui ){
 			$(this).slider("option", "value", $(this).attr('data-value') );
 			if( $(this).parent().hasClass('light-on') ){
@@ -50,8 +60,6 @@ $(function(){
 		value: 50,
 		stop: function(event, ui) {
 			$.get("api.php?fx=dim&type=all&uid=" + $(this).attr('data-device-id') + "&val=" + ui.value, function( data ) {
-			  //console.log( data );
-			  //set every slider to the new value
 			});
 			}
 	});
@@ -61,20 +69,12 @@ $(function(){
 		var room = $(this).parent().parent();
 		var val = 0;
 		if( $(this).hasClass('buttonOn') ){
-			val = 1;	
+			val = 1;
 		}
-		
+
 		$.get( "api.php?fx=toggle&type=room&uid=" + roomID + "&val=" + val, function( data ) {
-			  //console.log( data );
-			  $(room).find('.room-devices .device').each(function(){
-				if( val == 1){
-					$(this).addClass('light-on');
-					var v = $(this).find('.device-slider').slider( "value" );
-					$(this).css('background-color', 'rgba(255,255,0,' + ( v / 100 ) + ')');
-				}else{
-					$(this).removeClass('light-on');
-					$(this).css('background-color','transparent');
-				}
+			$(room).find('.room-devices .device').each(function(){
+				setDeviceLightState($(this), val == 1);
 			});
 		});
 	});
@@ -86,17 +86,9 @@ $(function(){
 		if( $(this).hasClass('buttonOn') ){
 			val = 1;
 		}
-		
+
 		$.get( "api.php?fx=toggle&type=device&uid=" + DID + "&val=" + val, function( data ) {
-			 //console.log( data );
-			 if( val == 1){
-				$(light).parents('.device').addClass('light-on');
-				var v = $(light).parents().find('.device-slider').slider( "value" );
-				$(light).parents('.device').css('background-color', 'rgba(255,255,0,' + ( v / 100 ) + ')');
-			}else{
-				$(light).parents('.device').removeClass('light-on');
-				$(light).parents('.device').css('background-color','transparent');
-			}
+			setDeviceLightState($(light).parents('.device'), val == 1);
 		});
 	});
 
@@ -106,34 +98,24 @@ $(function(){
 		if( $(this).hasClass('buttonOn') ){
 			val = 1;
 		}
-		
+
 		$.get( "api.php?fx=toggle&type=all&uid=ALL&val=" + val, function( data ) {
-			//console.log( data );
 			$('.room-devices .device').each(function(){
-				if( val == 1){
-					$(this).addClass('light-on');
-					var v = $(this).find('.device-slider').slider( "value" );
-					$(this).css('background-color', 'rgba(255,255,0,' + ( v / 100 ) + ')');
-				}else{
-					$(this).removeClass('light-on');
-					$(this).css('background-color','transparent');
-				}
+				setDeviceLightState($(this), val == 1);
 			});
 		});
 	});
-	
+
 	$('.runScene').click(function(event){
 		var sid = $(this).attr('data-scene-id');
 		var mode = $(this).attr('data-scene-mode');
-		
-		//should I make scene dimmable, off / on? hmm..
-		
+
 		$.get( "api.php?fx=scene&type=" + mode + "&uid=" + sid, function( data ) {
 			console.log( data );
 		});
 	});
-	
-	
+
+
 	$('#arrayDump').click(function(){
 		$(this).toggleClass('toggled');
 	});

@@ -68,8 +68,7 @@
 			}
 			
 			echo "<p>Final Result: ".sizeof($NOW_DEVICES).". You may need to run this more than once to discover the bulbs. They will be auto-added to your system. </p>";
-			//pa( $NOW_DEVICES);
-	
+				
 	
 		echo '</div>';
 

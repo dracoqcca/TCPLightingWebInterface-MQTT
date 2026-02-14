@@ -2,7 +2,7 @@ version: '3.6'
 services:
   TCPLightingWebInterface:
     container_name: TCPLightingWebInterface
-    image: php:7-apache
+    image: php:8.3-apache
     environment:
     - TZ=America/Toronto
     - BRIDGE_IP=${BRIDGE_IP}

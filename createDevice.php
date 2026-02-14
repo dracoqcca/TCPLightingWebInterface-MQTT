@@ -116,7 +116,6 @@ echo '<div class="container" style="padding: 20px; background-color: #fff;">';
 			$result = getCurlReturn($CMD);
 			$array = xmlToArray($result);
 			$ROOM_COLOURS = array();
-			//pa($array);
 			foreach( $array['room'] as $room ){
 				$ROOM_COLOURS[ $room["colorid"] ]["name"] =  $room["name"];
 				$ROOM_COLOURS[ $room["colorid"] ]["hex"] =  $room["color"];
@@ -161,7 +160,6 @@ echo '<div class="container" style="padding: 20px; background-color: #fff;">';
 				<td>
 					<?php
 						$devices = getDevices();
-						//pa($devices);
 						
 						
 						

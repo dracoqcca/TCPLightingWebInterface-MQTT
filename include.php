@@ -105,6 +105,42 @@ function getDevices(){
 	return $DEVICES;
 }
 
+function renderColorSelect($selectedId, $ROOM_COLOURS, $showPickOption = false){
+	$colors = array(
+		0 => 'Black', 1 => 'Green', 2 => 'Dark Blue', 3 => 'Red',
+		4 => 'Yellow', 5 => 'Purple', 6 => 'Orange', 7 => 'Light Blue', 8 => 'Pink'
+	);
+	echo '<select name="color">';
+	if($showPickOption){ echo '<option value="">Pick Colour</option>'; }
+	foreach($colors as $id => $name){
+		$sel = ($selectedId == $id) ? "selected" : "";
+		$roomLabel = isset($ROOM_COLOURS[$id]) ? ' ('.$ROOM_COLOURS[$id]['name'].')' : '';
+		echo '<option value="'.$id.'" '.$sel.'>'.$name.$roomLabel.'</option>';
+	}
+	echo '</select> ';
+}
+
+function renderDeviceCard($device, $options = array()){
+	$showInfo = isset($options['showInfo']) ? $options['showInfo'] : false;
+	$showRcGroup = isset($options['showRcGroup']) ? $options['showRcGroup'] : false;
+	$did = $device['did'];
+	$offline = isset($device['offline']) && $device['offline'] == 1;
+	$level = isset($device['level']) ? $device['level'] : 100;
+
+	echo '<div class="'.($offline ? 'unplugged' : 'plugged').' device '.($device['state'] == 1 ? 'light-on' : 'light-off').' '.($device['prodtype'] == 'Light Fixture' ? 'light-fixture' : '').'" data-device-id="'.$did.'">';
+		if($showRcGroup && isset($device["other"]) && isset($device["other"]["rcgroup"]) && $device["other"]["rcgroup"] != null && $device["other"]["rcgroup"] <= 4){
+			echo '<div class="control-button">'.$device["other"]["rcgroup"].'</div>';
+		}
+		echo '<p class="device-name"><b>'.$device['name'].'</b>';
+		if($showInfo){ echo ' <a href="info.php?did='.$did.'"><img src="css/images/info.png"/></a>'; }
+		echo '</p>';
+		echo '<p class="on-off-buttons"><button data-device-id="'.$did.'" class="onOffDeviceToggleButton buttonOn">On</button> | <button data-device-id="'.$did.'" class="onOffDeviceToggleButton buttonOff">Off</button></p>';
+		echo '<div class="clear"></div>';
+		echo '<p>Brightness:</p>';
+		echo '<div class="device-slider" data-value="'.$level.'" data-device-id="'.$did.'"></div>';
+	echo '</div>';
+}
+
 function pageHeader($title){
 	global $CURRENT_PAGE_SCRIPT;
 	?>

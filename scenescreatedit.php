@@ -26,8 +26,7 @@
 		}
 		
 		
-		//echo "SceneID: ".$sceneID." Action: ". $action;
-		
+				
 		if( $action == "save"){
 			echo '<pre>'.print_r($_POST,true).'</pre>';
 			
@@ -264,8 +263,7 @@
 			//get rooms, then devices
 			$('.roomSceneContainer').each(function(){
 				
-				//console.log( $(this).attr('data-room-name') + " Room ID: " + $(this).attr('data-room-id') + " - toggled: " + $(this).find(' > .EnabledOrNot > input.roomToggle').prop('checked') );
-				var rid = $(this).attr('data-room-id');
+								var rid = $(this).attr('data-room-id');
 				var rname = $(this).attr('data-room-name');
 				var ron = "";
 				var rval = "";
@@ -441,8 +439,7 @@
 		$('#startHour, #stopHour').change(function(){
 			if( $(this).val() == "sunrise" || $(this).val() == "sunset" || $(this).val() == "-1" ){
 				$(this).parent().find("select").not($(this)).attr("disabled","disabled");
-				//$('#schedule .timeContainer').not( $(this).parent() ).find("select option[value='" + $(this).val() + "']");
-			}else{
+							}else{
 				$(this).parent().find("select").not($(this)).removeAttr("disabled","disabled");
 			}
 		});
@@ -467,6 +464,7 @@
 	$array = xmlToArray($result);
 	
 	$scenes = $array["scene"];
+	$SCENE_ICONS = array("away.png", "bolt.png", "clock.png", "coffee.png", "dim.png", "eat.png", "e_car.png", "fan_cool.png", "fan_heat.png", "heart.png", "home.png", "lamp.png", "light.png", "music.png", "night.png", "off_to_work.png", "rainy.png", "sensor.png", "star.png", "target.png", "thermostat.png", "tree.png", "tv.png", "vacation.png", "washing_machine.png", "zroom_00.png", "zroom_01.png", "zroom_02.png", "zroom_03.png", "zroom_04.png", "zroom_05.png", "zroom_06.png", "zroom_07.png", "zroom_08.png", "zroom_09.png");
 	if( is_array($scenes) && isset($_REQUEST['SID']) && $_REQUEST['SID'] != ""){
 		$scene =  $_REQUEST['SID'];
 		//thought -> if -1 New Scene?
@@ -480,9 +478,8 @@
 					<!--<p><b><?php echo $scenes[$x]["name"]; ?></b> (<?php echo is_array($scenes[$x]["device"]) ? sizeof($scenes[$x]["device"]) : ""; ?>)</p>-->
 					<p><img id="icon" src="css/<?php echo $scenes[$x]["icon"]; ?>" /></p>
 					<p>
-						<?php $icons = array("away.png", "bolt.png", "clock.png", "coffee.png", "dim.png", "eat.png", "e_car.png", "fan_cool.png", "fan_heat.png", "heart.png", "home.png", "lamp.png", "light.png", "music.png", "night.png", "off_to_work.png", "rainy.png", "sensor.png", "star.png", "target.png", "thermostat.png", "tree.png", "tv.png", "vacation.png", "washing_machine.png", "zroom_00.png", "zroom_01.png", "zroom_02.png", "zroom_03.png", "zroom_04.png", "zroom_05.png", "zroom_06.png", "zroom_07.png", "zroom_08.png", "zroom_09.png"); ?>
-						<select name="sceneIcon" id="sceneIcon">
-							<?php foreach($icons as $icon ){
+												<select name="sceneIcon" id="sceneIcon">
+							<?php foreach($SCENE_ICONS as $icon ){
 								echo '<option value="'.$icon.'"'.($scenes[$x]["icon"] == "images/scene/".$icon ? " selected" : "").'>'. ucfirst( pathinfo($icon)['filename'] ).'</option>';
 							}
 							?>
@@ -533,9 +530,8 @@
 			<div class="scene-container" id="scene-id-<?php echo $scenes[$x]["sid"]; ?>">
 					<p><img id="icon" src="css/images/scene/bolt.png" /></p>
 					<p>
-						<?php $icons = array("away.png", "bolt.png", "clock.png", "coffee.png", "dim.png", "eat.png", "e_car.png", "fan_cool.png", "fan_heat.png", "heart.png", "home.png", "lamp.png", "light.png", "music.png", "night.png", "off_to_work.png", "rainy.png", "sensor.png", "star.png", "target.png", "thermostat.png", "tree.png", "tv.png", "vacation.png", "washing_machine.png", "zroom_00.png", "zroom_01.png", "zroom_02.png", "zroom_03.png", "zroom_04.png", "zroom_05.png", "zroom_06.png", "zroom_07.png", "zroom_08.png", "zroom_09.png"); ?>
-						<select name="sceneIcon" id="sceneIcon">
-							<?php foreach($icons as $icon ){
+												<select name="sceneIcon" id="sceneIcon">
+							<?php foreach($SCENE_ICONS as $icon ){
 								echo '<option value="'.$icon.'"'.( "images/scene/bolt.png" == "images/scene/".$icon ? " selected" : "").'>'. ucfirst( pathinfo($icon)['filename'] ).'</option>';
 							}
 							?>
@@ -593,17 +589,13 @@
 								if( isset( $sd["cmd"]["0"] ) ){
 									$SWITCH_ON = $sd["cmd"]["0"]["value"];
 									if( ! is_array( $sd["cmd"]["1"]["value"] ) ){
-										//echo "<p>Level: ". $sd["cmd"]["1"]["value"]."</p>";
-										$LEVEL = $sd["cmd"]["1"]["value"];
+																				$LEVEL = $sd["cmd"]["1"]["value"];
 									}else{
-										//echo "<p>Level: Unknown</p>"; // bug with bridge sometimes doesn't set for unplugged devices
-									}
+																			}
 								}else{
-									//echo "Device set to Off!";
-								}
+																	}
 							}else{
-								//echo "Not in Scene"; 
-							}
+															}
 						}
 					}else{
 						//check
@@ -611,18 +603,14 @@
 							
 							if( isset( $scene['device']["0"] ) ){
 								$SWITCH_ON = $scene['device']["0"]["value"];
-								//echo "<p>Level: ". $scene['device']["cmd"]["1"]["value"]."</p>";
-								$LEVEL = $scene['device']["cmd"]["1"]["value"];
+																$LEVEL = $scene['device']["cmd"]["1"]["value"];
 							}else{
-								//echo "Here!";
-								$SWITCH_ON = $scene['device']['cmd']['0']["value"];
+																$SWITCH_ON = $scene['device']['cmd']['0']["value"];
 								$LEVEL = $scene['device']["cmd"]['1']["value"];
-								//pa( $scene );
-							}
+															}
 							
 						}else{
-							//echo "Not in Scene";
-						}
+													}
 					}
 
 					if( in_array( $d['did'], $devices ) ){
@@ -697,8 +685,7 @@
 					//no Data
 				}
 			}
-			//pa( $scene );
-			?>
+						?>
 			<div id="scheduleContainer">
 				Use Schedule:
 				<div class="sched-switch sched-val-<?php echo $SceneSchedule; ?>">
