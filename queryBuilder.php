@@ -30,7 +30,6 @@ $(function(){
 	$('#sceneLights').hide();
 	$('#roomLights').hide();
 	$('#builder').change(function(){
-		console.log( $(this).val() );
 		var id = $(this).find('option:selected').attr('data-device-id');
 		var type = $(this).find('option:selected').attr('data-device-type');
 		var roomName = "";
@@ -44,7 +43,6 @@ $(function(){
 			$('#roomLights').show();
 			
 			roomName = $(this).find('option:selected').attr('data-room-name');
-			console.log("Type: " + type + ", id: " + id + ", RN: " + roomName );
 			$('#appletImage').html('<img src="css/images/IFTTTAppletPhrase.png"/>');
 			
 			if( type == "room"  ){
@@ -156,7 +154,6 @@ $(function(){
 		$temp.val( $(this).text() ).select();
 		document.execCommand("copy");
 		$temp.remove();
-		console.log("Copying " + $(this).html() + " to Clipboard");
 
 	});
 	

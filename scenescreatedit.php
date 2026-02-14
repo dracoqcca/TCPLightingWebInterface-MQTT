@@ -73,9 +73,6 @@
 				$type = "schedulecustom";
 			}
 						
-					//	pa( $_POST );
-				//	echo "Start: ".$startTime.", stop: ".$stopTime.", every: ".$every;
-					//exit;
 
 			$cmd = "cmd=SceneCreateEdit&data=<gip><version>1</version><token>".TOKEN."</token>".$sceneID."<active>".$active."</active>";
 			
@@ -207,7 +204,6 @@
 		});
 		
 		$('.roomToggle').change(function(){
-			console.log( $(this).attr('value') + ( $(this).prop('checked') ? ' checked' : '' ) );
 			if( $(this).prop('checked') == true){
 				//toggling on the room
 				$(this).closest('.roomSceneContainer').find('.room-controls').removeClass('controls-toggled-0').addClass('controls-toggled-1');
@@ -221,7 +217,6 @@
 		});
 		
 		$('.deviceToggle').change(function(){
-			console.log( $(this).attr('value') + ( $(this).prop('checked') ? ' checked' : '' ) );
 			if( $(this).prop('checked') == true){
 				$(this).closest('.roomDeviceContainer').find('.device-controls').removeClass('controls-toggled-0').addClass('controls-toggled-1');
 			}else{
@@ -232,12 +227,10 @@
 		$('.control-switch').click(function(event){
 			event.preventDefault();
 			if( $(this).hasClass('switch-val-1') ){
-				console.log("Toggle switch from on to off");
 				$(this).removeClass('switch-val-1').addClass('switch-val-0');
 				$(this).find('input[type="checkbox"]').prop('checked', false);
 				$(this).find('input[type="checkbox"]').attr('value', 0 );
 			}else{
-				console.log("Toggle switch from off to on");
 				$(this).removeClass('switch-val-0').addClass('switch-val-1');
 				$(this).find('input[type="checkbox"]').prop('checked', true);
 				$(this).find('input[type="checkbox"]').attr('value',1);
@@ -248,7 +241,6 @@
 		$('#saveScene').click(function(event){
 			event.preventDefault();
 			
-			console.log("here");
 			
 			$('.switch-val-0 .switch input.device-toggle').each(function(){
 				$(this).attr('value', 0); //fix for non zeroed out switches
@@ -275,12 +267,9 @@
 				
 					if( $(this).find('.control-switch input.device-toggle').prop('checked') == true ){
 						ron = 1;
-						console.log("Room " + $(this).attr('data-room-name') + " is set to ON.");
-						console.log("Room is set to: " + $(this).find('.control-slider input.value-slider').attr('value') );
 						rval = $(this).find('.control-slider input.value-slider').attr('value');
 						
 					}else{
-						console.log("Room " + $(this).attr('data-room-name') + " is set to OFF.");
 						ron = 0;
 						rval = 0;
 					}
@@ -297,17 +286,13 @@
 						
 						var dname = $(this).find(' > p').html();
 						if( $(this).find('.EnabledOrNot > input.deviceToggle').prop('checked') == true ){
-							console.log(dname + " is part of scene.");
 							//check if device is set to ON or OFF.
 							if( $(this).find('.control-switch input.device-toggle').attr('value') == 1 ){
 								don = 1;
-								console.log( dname + " is set to ON");
 								
 								//get value.
-								console.log("Light is set to: " + $(this).find('.control-slider input.value-slider').attr('value') );
 								dval = $(this).find('.control-slider input.value-slider').attr('value');
 							}else{
-								console.log( dname + " is set to OFF");
 								don = 0;
 								dval = 0;
 							}
@@ -315,7 +300,6 @@
 							devices.push( { did: did, name: dname, toggled: don, value: dval, enabled: 1 } );
 						}else{
 							//ignore device
-							console.log(dname + " not part of scene.");
 						}
 					});
 				}
@@ -367,7 +351,6 @@
 			var scene = {action : "save", sceneID: sID, name: sName, icon: icon,  rooms: rooms, devices: devices, active: enabled, schedule : schedule };
 			
 			$.post( "scenescreatedit.php",  scene ).done( function( data ){
-				console.log("Response: " + data);
 				var json =  jQuery.parseJSON( data );
 				if( json.resp.rc == 200 ){
 					window.alert("Scene Saved");
@@ -382,7 +365,6 @@
 				if( sID != json.resp.sid && sID == -1){
 					window.location = "scenescreatedit.php?SID=" + json.resp.sid;
 				
-				console.log( json );
 				}
 				
 			});

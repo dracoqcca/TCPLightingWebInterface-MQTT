@@ -29,7 +29,6 @@ $(function(){
 			$(this).next('.slider-value').text(ui.value + '%');
 			var room = $(this).parent().parent();
 			$.get("api.php?fx=dim&type=room&uid=" + $(this).attr('data-room-id') + "&val=" + ui.value, function( data ) {
-				console.log( data );
 				$(room).find('.device-slider').each(function(){
 					$(this).slider('value', ui.value );
 					$(this).next('.slider-value').text(ui.value + '%');
@@ -53,7 +52,6 @@ $(function(){
 		stop: function(event, ui) {
 			$(this).next('.slider-value').text(ui.value + '%');
 			$.get("api.php?fx=dim&type=device&uid=" + $(this).attr('data-device-id') + "&val=" + ui.value, function( data ) {
-			  console.log( data );
 			});
 			},
 		slide: function( event, ui ) {
@@ -130,7 +128,6 @@ $(function(){
 		var mode = $(this).attr('data-scene-mode');
 
 		$.get( "api.php?fx=scene&type=" + mode + "&uid=" + sid, function( data ) {
-			console.log( data );
 		});
 	});
 

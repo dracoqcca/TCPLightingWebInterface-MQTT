@@ -1,5 +1,4 @@
 <?php
-error_reporting(E_ALL);
 /*
  *
  * TCP Ligthing Scheduler Script - By Brendon Irwin

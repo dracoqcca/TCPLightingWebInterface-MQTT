@@ -8,7 +8,6 @@
 include "include.php";
 
 if (strtoupper($_SERVER['REQUEST_METHOD']) == 'POST'){
-	error_reporting(E_ALL);
 	$sel = $_POST['selected'];
 	$name = $_POST['name'];
 	$colourID = $_POST['color'];
@@ -91,9 +90,7 @@ echo '<div class="container" style="padding: 20px; background-color: #fff;">';
 		$('#post').click(function(event){
 			
 			var count = $('#selected option').length;
-			console.log( count );
 			if( count > 1){
-				console.log("Submit");
 				//select all the selected 
 				$('#selected option').prop('selected', true);
 				$('#createDevice').submit();

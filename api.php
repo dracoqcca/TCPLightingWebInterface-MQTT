@@ -402,7 +402,6 @@
 			}elseif( $type == "1"){
 				$CMD = "cmd=SceneRun&data=<gip><version>1</version><token>".TOKEN."</token><sid>".$UID."</sid><val>1</val></gip>";
 			}elseif( $type == "delete" ){
-				//$CMD = "cmd=SceneDelete&data=<gip><version>1</version><token>".TOKEN."</token><sid>".$UID."</sid></gip>";
 			}
 
 			if( $CMD != "" ){

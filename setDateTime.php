@@ -14,7 +14,6 @@ if( TOKEN != "" ){
 			$CMD = "cmd=AccountSetDateTime&data=<gip><version>1</version><token>".TOKEN."</token><datetime>".$time.":00</datetime></gip>";
 			$result = getCurlReturn($CMD);
 			$array = xmlToArray($result);
-			pa($array);
 		}
 		
 	}
@@ -93,7 +92,6 @@ if( TOKEN != "" ){
 	$result = getCurlReturn($CMD);
 	$array = xmlToArray($result);
 	$array =  $array["gwrcmd"]["gdata"]["gip"]["gateway"];
-	pa($array);
 	
 	
 }

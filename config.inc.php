@@ -1,4 +1,5 @@
 <?php
+error_reporting(E_ALL);
 /*TCP Lighting Configuration Options*/
 
 define("LIGTHING_BRIDGE_IP", 				getenv('BRIDGE_IP') ?: "192.168.1.TCP");

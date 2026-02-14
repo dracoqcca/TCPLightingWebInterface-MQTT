@@ -12,31 +12,6 @@ $result = getCurlReturn($CMD);
 $array = xmlToArray($result);
 $ROOM_COLOURS = array();
 
-/*
-pa( $array );
-Array
-(
-    [version] => 1
-    [rc] => 200
-    [room] => Array
-        (
-            [rid] => 0
-            [name] => Unknown Room
-            [desc] => Array
-                (
-                )
-
-            [known] => 1
-            [type] => 0
-            [color] => 000000
-            [colorid] => 0
-            [img] => css/images/black.png
-            [power] => 0
-            [poweravg] => 0
-            [energy] => 0
-        )
-
-)*/
 
 
 if ( isset( $array["room"]["rid"] ) ){ $array["room"] = array(   $array["room"]); }
@@ -144,7 +119,6 @@ if( isset($_REQUEST['did']) && $_REQUEST['did'] != "" ){
 					var fd = 0;
 
 					$.get( "info.php?delete=" + did + "&fullDelete=" + fd, function( data ) {
-						console.log( data );
 						window.location = "index.php";
 					});
 				}

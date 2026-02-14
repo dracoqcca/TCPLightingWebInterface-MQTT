@@ -66,7 +66,6 @@ if( TOKEN != "" ){
 
 				}else{
 					echo 'No devices?';
-					pa( $room );
 				}
 				// dont render if not more than 1 device, or all devices unplugged
 				if( sizeof($DEVICES) > 1 && $unplugged != sizeof($DEVICES) ){

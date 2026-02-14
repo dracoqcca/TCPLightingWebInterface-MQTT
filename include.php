@@ -4,7 +4,6 @@
  * PHP includes
  *
  */
- error_reporting(0);
  
 include "config.inc.php";
 
@@ -230,15 +229,38 @@ if( ! file_exists(LOG_DIR)  ){
 	mkdir(  LOG_DIR, 0755, true);
 }
 
+define("LOG_MAX_SIZE", 1 * 1024 * 1024); // 1 MB per log file
+define("LOG_MAX_BACKUPS", 3);            // keep .1 .2 .3
+
+function rotateLog($filepath){
+	if( !file_exists($filepath) || filesize($filepath) < LOG_MAX_SIZE ){
+		return;
+	}
+	for($i = LOG_MAX_BACKUPS - 1; $i >= 1; $i--){
+		$older = $filepath . "." . ($i + 1);
+		$newer = $filepath . "." . $i;
+		if( file_exists($newer) ){
+			rename($newer, $older);
+		}
+	}
+	rename($filepath, $filepath . ".1");
+	clearstatcache(true, $filepath);
+}
+
+function writeLog($filepath, $string){
+	rotateLog($filepath);
+	file_put_contents($filepath, date('Y-m-d H:i:s ') . $string . "\n", FILE_APPEND | LOCK_EX);
+}
+
 function APILog($string){
 	if( LOG_API_CALLS == 1 ){
-		file_put_contents(  LOG_DIR . DIRECTORY_SEPARATOR . "API-Request.log", date('Y-m-d H:i:s '). $string . "\n", FILE_APPEND | LOCK_EX);
+		writeLog(LOG_DIR . DIRECTORY_SEPARATOR . "API-Request.log", $string);
 	}
 }
 
 function SCHEDLog($string){
 	if( LOG_ACTIONS == 1 ){
-		file_put_contents(  LOG_DIR . DIRECTORY_SEPARATOR . "Schedule-Actioned.log", date('Y-m-d H:i:s '). $string . "\n", FILE_APPEND | LOCK_EX);
+		writeLog(LOG_DIR . DIRECTORY_SEPARATOR . "Schedule-Actioned.log", $string);
 	}
 }
 
@@ -258,7 +280,7 @@ function saveSetting($key, $value){
 
 function BridgeErrorLog($string){
 	if( LOG_BRIDGE_ERRORS == 1 ){
-		file_put_contents(LOG_DIR . DIRECTORY_SEPARATOR . "Bridge-Errors.log", date('Y-m-d H:i:s '). $string . "\n", FILE_APPEND | LOCK_EX);
+		writeLog(LOG_DIR . DIRECTORY_SEPARATOR . "Bridge-Errors.log", $string);
 	}
 }
 

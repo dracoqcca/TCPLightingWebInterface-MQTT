@@ -42,9 +42,7 @@
 		$(function(){
 			function runSchedule(){
 				var d = new Date();
-				console.log("Running Schedule " + d);
 				$.get("runSchedule.php", function( data ) {
-					console.log("Schedule Runnner returns: " + data);
 				});
 			}
 			
