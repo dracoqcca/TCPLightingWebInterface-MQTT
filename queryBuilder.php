@@ -2,11 +2,6 @@
 include "include.php";
 pageHeader("IFTTT Query Builder");
 ?>
-<style>
-p{margin: 10px 0; }
-.response{ cursor: pointer; }
-.response:hover{ color: #f00; }
-</style>
 <div class="container" style="padding: 20px; background-color: #fff; border: 1px solid #000;">
 <p>Use this to assist with creation of the IFTTT web-hooks quickly</p>
 <p>This builder is aimed at setting up a Google Assistant Hook which then calls a webhook with the API string. Follow the <a target="_blank" href="https://github.com/sktaylortrash/TCPLightingWebInterface-MQTT/wiki/IFTTT-Integration">guide</a> in the wiki and feel free to post a question in the issues</p>
@@ -203,12 +198,6 @@ $(function(){
 </select>
 </p>
 <br />
-<style>
-#instructions p{ margin: 10px 0; }
-#select{ margin-bottom: 10px; }
-.response{ font-weight: bold; font-style: italic; font-size: 16px; }
-
-</style>
 <div id="instructions">
 	<div id="appletImage" style="float: left; margin-right: 20px; overflow: hidden;">
 	

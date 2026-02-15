@@ -1,190 +1,21 @@
-<?php 
-	include "include.php"; 
+<?php
+	include "include.php";
 	pageHeader("TCP Lighting Scheduler");
 ?>
-	<style>
-		.scheduledTask{
-			margin: 20px 0px;
-			background-color: #fff;
-		}
-		
-		.scheduledTask  > div{ margin: 10px 0; }
-		
-		.fxTo{ width: 200px; }
-		
-		.ifSunTime,
-		.ifFixedTime,
-		.ifDim,
-		.ifSwitch{ display: none; }
-		
-		.scheduledTask.tm-SunTime .ifSunTime{ display: block; }
-		.scheduledTask.tm-FixedTime .ifFixedTime{ display: block; }
-		.scheduledTask.fx-Dim .ifDim{ display: block; }
-		.scheduledTask.fx-Switch .ifSwitch{ display: block; }
-		
-		.scheduledTask { border: 1px solid #000; padding: 20px; position: relative; }
-		.scheduledTask .delTask{
-			position: absolute; top: -1px; right: -1px; color: #f00; cursor: pointer; height: 20px; width: 20px; border: 1px solid #000; text-align: center; margin: 0;
-		}
-		
-		.taskNote{ width: 100%; clear: both; }
-		.taskNote textarea{ height: 50px; width: 100%; }
-		
-		p{ margin: 4px 0; }
-	</style>
 	<script>
-		function randomString(length, chars) {
-			var result = '';
-			for (var i = length; i > 0; --i) result += chars[Math.floor(Math.random() * chars.length)];
-			return result;
-		}
-	
-		$(function(){
-			function runSchedule(){
-				var d = new Date();
-				$.get("runSchedule.php", function( data ) {
-				});
-			}
-			
-			$('#runOnce').click(function(){
-				runSchedule();
-			});
-			
-			$('#poll').click(function(){
-				$('#runOnce').attr('disabled', true);
-				$(this).unbind();
-				$(this).addClass('running');
-				setInterval(runSchedule, 30000);
-			});
-		
-		/* Output Add Scheduled Task */
-		<?php ob_start(); getScheduleView("__REPLACE__");$schedule = ob_get_clean();	?>	
-		var addSchedule = '<?php echo preg_replace( "/\r|\n/", "",$schedule); ?>';	
-		
-		function SelectMoveRows(SS1,SS2){
-			//function shamelessly borrowed from http://johnwbartlett.com/cf_tipsntricks/index.cfm?TopicID=86
-			var SelID='';
-			var SelText='';
-			// Move rows from SS1 to SS2 from bottom to top
-			for (i=SS1.options.length - 1; i>=0; i--){
-				if (SS1.options[i].selected == true){
-					SelID=SS1.options[i].value;
-					SelText=SS1.options[i].text;
-					var newRow = new Option(SelText,SelID);
-					SS2.options[SS2.length]=newRow;
-					SS1.options[i]=null;
-				}
-			}
-		}
-		
-		function bindEvents(){
-
-			$('select[name="TIME_TYPE"]').change(function(){
-				$(this).closest('.scheduledTask').removeClass('tm-SunTime');
-				$(this).closest('.scheduledTask').removeClass('tm-FixedTime');
-				
-				if( $(this).find('option:selected').val() == "FIXED" ){
-					$(this).closest('.scheduledTask').addClass('tm-FixedTime');
-				}else{
-					$(this).closest('.scheduledTask').addClass('tm-SunTime');
-				}
-			});
-		
-			$('select[name="FX"]').change(function(){
-				$(this).closest('.scheduledTask').removeClass('fx-Dim');
-				$(this).closest('.scheduledTask').removeClass('fx-Switch');
-				
-				if( $(this).find('option:selected').val() == "DIM" ){
-					$(this).closest('.scheduledTask').addClass('fx-Dim');
-				}else{
-					$(this).closest('.scheduledTask').addClass('fx-Switch');
-				}
-			});
-			
-			$('.schedule-slider').slider({
-				range: "min",
-				min: 0,
-				max: 100,
-				//value: $(this).attr('data-level'),
-				create: function( event, ui ){
-					$(this).slider("option", "value", $(this).parent().find("input[name='DIM_SCHED']").val() );
-				},
-				stop: function(event, ui) {
-					$(this).parent().find('input[name="DIM_SCHED"]').val( ui.value );
-				},
-				slide: function( event, ui ) {
-					$(this).parent().find('input[name="DIM_SCHED"]').val( ui.value );
-				}
-			});
-			
-			$('select[name="TIME_TYPE"]').change();			
-
-			$('select[name="FX"]').change();
-			
-			$('.btnAdd, .btnRemove').click(function(){
-				
-				var available =  $(this).closest('.deviceList').find('select.available')[0];
-				var selected = $(this).closest('.deviceList').find('select.selected')[0];
-
-				if( $(this).hasClass('btnAdd') ){
-					SelectMoveRows(available,  selected );
-				}else{
-					SelectMoveRows( selected, available );
-				}
-				
-			});
-			
-			$('.delTask').click(function(){ $(this).parent().remove(); });
-		
-		}
-		
-		$('#add').click(function(){
-			
-			$('#events').append(   addSchedule.replace(/__REPLACE__/g, randomString(10, '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')  ) );
-			bindEvents();
-		});
-		
-		$('#save').click(function(){
-			$('select[name="DEVICE_SELECTED"] option').each(function(){ $(this).attr('selected','selected'); });
-			var schedules = [];
-			
-			$('.scheduledTask').each(function(){
-				schedules.push( $(this).find(':input').serializeArray() );
-			});
-			
-			/* Sample
-			[[{"name":"DAY_MON","value":"on"},{"name":"DAY_WED","value":"on"},{"name":"DAY_FRI","value":"on"},{"name":"HOUR","value":"8"},{"name":"MIN","value":"1"},{"name":"FX","value":"SWITCH"},{"name":"DIM_SCHED","value":""},{"name":"SWITCH_SCHED","value":"1"},{"name":"DEVICE_SELECTED","value":"359905593582463444"}],[{"name":"DAY_MON","value":"on"},{"name":"DAY_WED","value":"on"},{"name":"DAY_FRI","value":"on"},{"name":"HOUR","value":"8"},{"name":"MIN","value":"10"},{"name":"FX","value":"SWITCH"},{"name":"DIM_SCHED","value":""},{"name":"DEVICE_SELECTED","value":"359905593582463444"}]]
-			*/
-						$.ajax({
-				type: 'POST',
-				url: 'runSchedule.php',
-				data: {'schedule': JSON.stringify(schedules)},
-				success: function(msg) {
-				  alert("Saved");
-				}
-			  });
-			
-			
-		});
-		
-		bindEvents();
-		
-		$( "#events" ).sortable({
-			placeholder: "ui-state-highlight"
-		});
-		
-		$( "#events" ).disableSelection();
-	});
+	<?php ob_start(); getScheduleView("__REPLACE__");$schedule = ob_get_clean(); ?>
+	var addSchedule = '<?php echo preg_replace( "/\r|\n/", "",$schedule); ?>';
 	</script>
+	<script src="js/scheduler.js"></script>
 
 <?php
 	/*
 	 *
 	 * TCP Ligthing Web UI Test Script - By Brendon Irwin
-	 * 
-	 
+	 *
+
 	 */
-	
+
 	function getScheduleView($task=array()){
 		if( $task == "__REPLACE__"){
 			$randID = "__REPLACE__";
@@ -209,12 +40,12 @@
 				<label for=""<?php echo $randID; ?>_ALL><input id="<?php echo $randID; ?>_ALL" type="checkbox" name="DAY_ALL" <?php echo (isset($task["DAY_ALL"]) && $task["DAY_ALL"] == "on") ? " checked" : "";  ?>/> Everyday</label>
 			</div>
 			<div class="timeOfDay">
-				<label>Time: 
+				<label>Time:
 					<select name="TIME_TYPE"><option value="FIXED" <?php echo (isset($task["TIME_TYPE"]) && $task["TIME_TYPE"] == "FIXED") ? " selected" : ""; ?>>FIXED</option><option value="SUNRISE" <?php echo (isset($task["TIME_TYPE"]) && $task["TIME_TYPE"] == "SUNRISE") ? " selected" : ""; ?>>SUNRISE</option><option value="SUNSET" <?php echo (isset($task["TIME_TYPE"]) && $task["TIME_TYPE"] == "SUNSET") ? " selected" : ""; ?>>SUNSET</option>
 					</select>
 				</label>
                   </div>
-					
+
 			<div class="timeType">
 
 <?php /***
@@ -224,21 +55,21 @@
        *
        */
 ?>
-				
+
 				<div class="ifSunTime">
 
 
-					<label>Offset Hours: <select name="OFFSET_HOUR"><?php for($x=0; $x<=12; $x++){ echo '<option value="'.sprintf("%02d",$x).'"'.( (isset($task["OFFSET_HOUR"]) && $task["OFFSET_HOUR"] == $x) ? " selected" : "").'>'.sprintf("%02d",$x).'</option>'; } 
+					<label>Offset Hours: <select name="OFFSET_HOUR"><?php for($x=0; $x<=12; $x++){ echo '<option value="'.sprintf("%02d",$x).'"'.( (isset($task["OFFSET_HOUR"]) && $task["OFFSET_HOUR"] == $x) ? " selected" : "").'>'.sprintf("%02d",$x).'</option>'; }
 						?>
 						</select>
 					</label>
-					<label>Minutes: 
+					<label>Minutes:
 						<select name="OFFSET_MIN">
-						<?php for($x=0; $x<=59; $x++){ echo '<option value="'.sprintf("%02d",$x).'"'.( (isset($task["OFFSET_MIN"]) && $task["OFFSET_MIN"] == $x) ? " selected" : "").'>'.sprintf("%02d",$x).'</option>'; } 
+						<?php for($x=0; $x<=59; $x++){ echo '<option value="'.sprintf("%02d",$x).'"'.( (isset($task["OFFSET_MIN"]) && $task["OFFSET_MIN"] == $x) ? " selected" : "").'>'.sprintf("%02d",$x).'</option>'; }
 						?>
 						</select>
 					</label>
-					<label> 
+					<label>
 						<select name="OFFSET_DIR"><option value="before" <?php echo (isset($task["OFFSET_DIR"]) && $task["OFFSET_DIR"] == "before") ? " selected" : ""; ?>>before</option><option value="after" <?php echo (isset($task["OFFSET_DIR"]) && $task["OFFSET_DIR"] == "after") ? " selected" : ""; ?>>after</option>
 						</select>
 					</label>
@@ -246,13 +77,13 @@
 				</div>
 
 				<div class="ifFixedTime">
-					<label>Hour: 
+					<label>Hour:
 					<select name="HOUR">
 					<?php for($x=0; $x<=23; $x++){
-						if( $x == 0 ){ 
+						if( $x == 0 ){
 							echo '<option value="'.sprintf("%02d",$x).'"'.( (isset($task["HOUR"]) && $task["HOUR"] == $x) ? " selected" : "").'>12 AM - MIDNIGHT</option>';
 						}else if($x == 12){
-							echo '<option value="'.sprintf("%02d",$x).'"'.( (isset($task["HOUR"]) && $task["HOUR"] == $x) ? " selected" : "").'>12 PM - NOON</option>';	
+							echo '<option value="'.sprintf("%02d",$x).'"'.( (isset($task["HOUR"]) && $task["HOUR"] == $x) ? " selected" : "").'>12 PM - NOON</option>';
 						}else{
 							if( $x > 12 ){
 								echo '<option value="'.sprintf("%02d",$x).'"'.( (isset($task["HOUR"]) && $task["HOUR"] == $x) ? " selected" : "").'>'. ($x - 12) .( $x >= 12 ? ' PM' : ' AM' ).'</option>';
@@ -264,11 +95,11 @@
 					</select>
 					</label>
 
-					<label>Minute: 
+					<label>Minute:
 					<select name="MIN">
-					<?php for($x=0; $x<=59; $x++){ 
+					<?php for($x=0; $x<=59; $x++){
 						echo '<option value="'.sprintf("%02d",$x).'"'.( (isset($task["MIN"]) && $task["MIN"] == $x) ? " selected" : "").'>'.sprintf("%02d",$x).'</option>';
-					} 
+					}
 					?>
 					</select>
 					</label>
@@ -335,7 +166,7 @@
 			</table>
                   </div>
 		</form>
-	
+
 
 <?php
 }
@@ -352,8 +183,8 @@
 		?>
 	</div>
 
- 
-<div id="events" class="container"> 
+
+<div id="events" class="container">
 	<?php
 		if( file_exists("schedule.sched") ){
 			$array = file_get_contents("schedule.sched");
@@ -370,7 +201,7 @@
  </div>
  <div class="container">
  <button id="save">Save</button>
- <button id="add">Add Task</button> 
+ <button id="add">Add Task</button>
  </div>
 
 <?php

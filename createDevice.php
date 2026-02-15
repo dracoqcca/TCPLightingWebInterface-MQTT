@@ -51,21 +51,6 @@ pageHeader("TCP Lighting Controller - Create Device");
 echo '<div class="container" style="padding: 20px; background-color: #fff;">';
 ?>
 <script type="text/javascript">
-	function SelectMoveRows(SS1,SS2){
-		//function shamelessly borrowed from http://johnwbartlett.com/cf_tipsntricks/index.cfm?TopicID=86
-		var SelID='';
-		var SelText='';
-		// Move rows from SS1 to SS2 from bottom to top
-		for (i=SS1.options.length - 1; i>=0; i--){
-			if (SS1.options[i].selected == true){
-				SelID=SS1.options[i].value;
-				SelText=SS1.options[i].text;
-				var newRow = new Option(SelText,SelID);
-				SS2.options[SS2.length]=newRow;
-				SS1.options[i]=null;
-			}
-		}
-	}
 	$(function(){
 		$('.btnAdd, .btnRemove').click(function(){		
 			var available =  $(this).closest('.deviceList').find('select.available')[0];
