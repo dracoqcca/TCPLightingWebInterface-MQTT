@@ -25,6 +25,16 @@ function setDeviceLightState($device, isOn){
 	}
 }
 
+function handleToggle(btn, type, uidAttr, deviceSelector){
+	var uid = $(btn).attr(uidAttr);
+	var val = $(btn).hasClass('buttonOn') ? 1 : 0;
+	$.get("api.php?fx=toggle&type=" + type + "&uid=" + uid + "&val=" + val, function(data){
+		$(deviceSelector).each(function(){
+			setDeviceLightState($(this), val == 1);
+		});
+	});
+}
+
 $(function(){
 	$('.room-slider').slider({
 		range: "min",
@@ -41,7 +51,7 @@ $(function(){
 		},
 		stop: function(event, ui) {
 			$(this).next('.slider-value').text(ui.value + '%');
-			var room = $(this).parent().parent();
+			var room = $(this).closest('.roomContainer');
 			$.get("api.php?fx=dim&type=room&uid=" + $(this).attr('data-room-id') + "&val=" + ui.value, function( data ) {
 				$(room).find('.device-slider').each(function(){
 					$(this).slider('value', ui.value );
@@ -96,41 +106,18 @@ $(function(){
 	});
 
 	$('button.onOffToggleButton').click(function(event){
-		var roomID = $(this).attr('data-room-id');
-		var room = $(this).parent().parent();
-		var val = 0;
-		if( $(this).hasClass('buttonOn') ){
-			val = 1;
-		}
-
-		$.get( "api.php?fx=toggle&type=room&uid=" + roomID + "&val=" + val, function( data ) {
-			$(room).find('.room-devices .device').each(function(){
-				setDeviceLightState($(this), val == 1);
-			});
-		});
+		var btn = this;
+		var room = $(this).closest('.roomContainer');
+		handleToggle(btn, 'room', 'data-room-id', room.find('.room-devices .device'));
 	});
 
 	$('button.onOffDeviceToggleButton').click(function(event){
-		var DID = $(this).attr('data-device-id');
-		var val = 0;
-		var light = $(this);
-		if( $(this).hasClass('buttonOn') ){
-			val = 1;
-		}
-
-		$.get( "api.php?fx=toggle&type=device&uid=" + DID + "&val=" + val, function( data ) {
-			setDeviceLightState($(light).parents('.device'), val == 1);
-		});
+		handleToggle(this, 'device', 'data-device-id', $(this).parents('.device'));
 	});
 
 	$('button.onOffHouseToggleButton').click(function(event){
-		var DID = $(this).attr('data-device-id');
-		var val = 0;
-		if( $(this).hasClass('buttonOn') ){
-			val = 1;
-		}
-
-		$.get( "api.php?fx=toggle&type=all&uid=ALL&val=" + val, function( data ) {
+		var val = $(this).hasClass('buttonOn') ? 1 : 0;
+		$.get("api.php?fx=toggle&type=all&uid=ALL&val=" + val, function(data){
 			$('.room-devices .device').each(function(){
 				setDeviceLightState($(this), val == 1);
 			});
