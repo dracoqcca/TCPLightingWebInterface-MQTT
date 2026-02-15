@@ -17,6 +17,14 @@ $REMOTE_IP = getenv('HTTP_CLIENT_IP')?: getenv('HTTP_X_FORWARDED_FOR')?: getenv(
 
 $CURRENT_PAGE_SCRIPT = basename($_SERVER["SCRIPT_FILENAME"], '.php');
 
+function h($str){
+	return htmlspecialchars($str, ENT_QUOTES, 'UTF-8');
+}
+
+function xmlEscape($str){
+	return htmlspecialchars($str, ENT_XML1 | ENT_QUOTES, 'UTF-8');
+}
+
 /*Function to Print Array*/
 function pa($array){
 	echo '<pre>'.print_r($array,true).'</pre>';
@@ -172,6 +180,9 @@ function renderDeviceCard($device, $options = array()){
 
 function pageHeader($title){
 	global $CURRENT_PAGE_SCRIPT;
+	header('X-Frame-Options: DENY');
+	header('X-Content-Type-Options: nosniff');
+	header('Referrer-Policy: same-origin');
 	?>
 <!DOCTYPE html>
 <html lang="en">

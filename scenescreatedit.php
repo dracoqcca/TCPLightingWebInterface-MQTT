@@ -156,7 +156,7 @@
                     </p>
 			</div>
 			<p>Scene ID: <?php echo $scenes[$x]["sid"]; ?></p>
-			<p>Scene Name: <input id="SceneName" type="text" value="<?php echo $scenes[$x]["name"]; ?>" /><p>
+			<p>Scene Name: <input id="SceneName" type="text" value="<?php echo h($scenes[$x]["name"]); ?>" /><p>
 			<p>Scene Enabled: <input type="radio" value="1" name="sceneActive" <?php echo ($scenes[$x]["active"] == 1 ? "checked" : "" ); ?>/> Scene Disabled: <input type="radio" value="0" name="sceneActive" <?php echo ($scenes[$x]["active"] == 0 ? "checked" : "" ); ?>/></p>
 			
 			<p>Save Scene: <button id="saveScene" data-scene-id="<?php echo $scenes[$x]["sid"]; ?>">Save Scene</button></p>
@@ -236,8 +236,8 @@
 			function renderDevice($d, $rtoggled, $rid){
 				global $devices;
 				global $scene;
-				echo '<div class="roomDeviceContainer" data-room-id="'.$rid.'" data-device-id="'.$d['did'].'" data-device-name="'.$d['name'].'">';
-					echo '<p>'.$d['name'].'</p>';
+				echo '<div class="roomDeviceContainer" data-room-id="'.$rid.'" data-device-id="'.$d['did'].'" data-device-name="'.h($d['name']).'">';
+					echo '<p>'.h($d['name']).'</p>';
 					
 					$SWITCH_ON = 0;
 					$LEVEL = 0;
@@ -290,8 +290,8 @@
 			
 			function renderRoom($r, $toggled){
 				global $scene;
-				echo '<div class="roomSceneContainer" data-room-name="'.$r["name"].'" data-room-id="'.$r["rid"].'">';
-				echo '<h2 class="room-name room-color-'.$r['colorid'].'">'.$r["name"].'</h2>';
+				echo '<div class="roomSceneContainer" data-room-name="'.h($r["name"]).'" data-room-id="'.$r["rid"].'">';
+				echo '<h2 class="room-name room-color-'.$r['colorid'].'">'.h($r["name"]).'</h2>';
 				$SWITCH_ON = 0;
 				$LEVEL = 0;
 				

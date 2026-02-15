@@ -133,13 +133,13 @@
 							$DATA = getRoomCarouselData();
 							if( $DATA !== null && sizeof($DATA) > 0 ){
 								foreach($DATA as $room){
-									echo '<optgroup label="Room - '.$room["name"].'">';
+									echo '<optgroup label="Room - '.h($room["name"]).'">';
 									$roomDevices = extractDevicesFromRoom($room);
 									foreach($roomDevices as $dev){
 										if( isset($task) && isset($task["devices"]) && is_array($task["devices"]) && in_array($dev['did'], $task["devices"]) ){
-											$selected.= '<option value="'.$dev['did'].'" selected>'.$dev['prodtype'].' - '.$dev['name'].'</option>';
+											$selected.= '<option value="'.$dev['did'].'" selected>'.h($dev['prodtype']).' - '.h($dev['name']).'</option>';
 										}else{
-											echo '<option value="'.$dev['did'].'">'.$dev['prodtype'].' - '.$dev['name'].'</option>';
+											echo '<option value="'.$dev['did'].'">'.h($dev['prodtype']).' - '.h($dev['name']).'</option>';
 										}
 									}
 									echo '</optgroup>';
@@ -188,7 +188,8 @@
 	<?php
 		if( file_exists("schedule.sched") ){
 			$array = file_get_contents("schedule.sched");
-			$tasks = unserialize ($array);
+			$tasks = json_decode($array, true);
+			if(!is_array($tasks)){ $tasks = unserialize($array); }
 			ob_start();
 			foreach($tasks as $task){
 				getScheduleView($task);

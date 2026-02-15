@@ -19,7 +19,7 @@ if (strtoupper($_SERVER['REQUEST_METHOD']) == 'POST'){
 			$devices.= '<device><did>'.$sel[$d].'</did></device>';
 		}
 		
-		$CMD = buildGipCommand("DeviceVirtualCreate", "<color>".$colourID."</color><name>".($name != "" ? $name : "NEW Virtual Device")."</name>".$devices.($remoteControl != "" ? "<other><rcgroup>".$remoteControl."</rcgroup></other>" : ""));
+		$CMD = buildGipCommand("DeviceVirtualCreate", "<color>".$colourID."</color><name>".xmlEscape($name != "" ? $name : "NEW Virtual Device")."</name>".$devices.($remoteControl != "" ? "<other><rcgroup>".$remoteControl."</rcgroup></other>" : ""));
 		$result = getCurlReturn($CMD);
 		$array = xmlToArray($result);
 		
@@ -111,15 +111,15 @@ echo '<div class="container" style="padding: 20px; background-color: #fff;">';
 			<label for="color">Color:<br /> 
 			<select name="color">
 				<option value="">Not Specified</option>
-				<option value="0">Black <?php echo isset( $ROOM_COLOURS[0] ) ?  ' ('.$ROOM_COLOURS[0]['name'].')' : ''; ?></option>
-				<option value="1">Green <?php echo isset( $ROOM_COLOURS[1] ) ?  ' ('.$ROOM_COLOURS[1]['name'].')' : ''; ?></option>
-				<option value="2">Dark Blue <?php echo isset( $ROOM_COLOURS[2] ) ?  ' ('.$ROOM_COLOURS[2]['name'].')' : ''; ?></option>
-				<option value="3">Red <?php echo isset( $ROOM_COLOURS[3] ) ?  ' ('.$ROOM_COLOURS[3]['name'].')' : ''; ?></option>
-				<option value="4">Yellow <?php echo isset( $ROOM_COLOURS[4] ) ?  ' ('.$ROOM_COLOURS[4]['name'].')' : ''; ?></option>
-				<option value="5">Purple <?php echo isset( $ROOM_COLOURS[5] ) ?  ' ('.$ROOM_COLOURS[5]['name'].')' : ''; ?></option>
-				<option value="6">Orange <?php echo isset( $ROOM_COLOURS[6] ) ?  ' ('.$ROOM_COLOURS[6]['name'].')' : ''; ?></option>
-				<option value="7">Light Blue <?php echo isset( $ROOM_COLOURS[7] ) ?  ' ('.$ROOM_COLOURS[7]['name'].')' : ''; ?></option>
-				<option value="8">Pink <?php echo isset( $ROOM_COLOURS[8] ) ?  ' ('.$ROOM_COLOURS[8]['name'].')' : ''; ?></option>
+				<option value="0">Black <?php echo isset( $ROOM_COLOURS[0] ) ?  ' ('.h($ROOM_COLOURS[0]['name']).')' : ''; ?></option>
+				<option value="1">Green <?php echo isset( $ROOM_COLOURS[1] ) ?  ' ('.h($ROOM_COLOURS[1]['name']).')' : ''; ?></option>
+				<option value="2">Dark Blue <?php echo isset( $ROOM_COLOURS[2] ) ?  ' ('.h($ROOM_COLOURS[2]['name']).')' : ''; ?></option>
+				<option value="3">Red <?php echo isset( $ROOM_COLOURS[3] ) ?  ' ('.h($ROOM_COLOURS[3]['name']).')' : ''; ?></option>
+				<option value="4">Yellow <?php echo isset( $ROOM_COLOURS[4] ) ?  ' ('.h($ROOM_COLOURS[4]['name']).')' : ''; ?></option>
+				<option value="5">Purple <?php echo isset( $ROOM_COLOURS[5] ) ?  ' ('.h($ROOM_COLOURS[5]['name']).')' : ''; ?></option>
+				<option value="6">Orange <?php echo isset( $ROOM_COLOURS[6] ) ?  ' ('.h($ROOM_COLOURS[6]['name']).')' : ''; ?></option>
+				<option value="7">Light Blue <?php echo isset( $ROOM_COLOURS[7] ) ?  ' ('.h($ROOM_COLOURS[7]['name']).')' : ''; ?></option>
+				<option value="8">Pink <?php echo isset( $ROOM_COLOURS[8] ) ?  ' ('.h($ROOM_COLOURS[8]['name']).')' : ''; ?></option>
 			</select> 
 			</label><br />
 		
@@ -149,7 +149,7 @@ echo '<div class="container" style="padding: 20px; background-color: #fff;">';
 					<select size="9" class="available" name="DEVICE_AVAILABLE" multiple>
 						<?php
 							foreach($devices as $device){
-								echo '<option value="'.$device['did'].'">'.$device['prodtype'].' - '.$device['name'].' ('.$ROOM_COLOURS[ $device["colorid"] ]["name"].')</option>';
+								echo '<option value="'.(int)$device['did'].'">'.h($device['prodtype']).' - '.h($device['name']).' ('.h($ROOM_COLOURS[ $device["colorid"] ]["name"]).')</option>';
 							}
 						?>
 					</select>

@@ -61,9 +61,8 @@ if (strtoupper($_SERVER['REQUEST_METHOD']) == 'POST'){
 	}
 	
 	if( SAVE_SCHEDULE ){
-		$serialized = serialize($tasks);
-		$curDir = dirname(__FILE__);		
-		file_put_contents($curDir . DIRECTORY_SEPARATOR . "schedule.sched", $serialized);
+		$curDir = dirname(__FILE__);
+		file_put_contents($curDir . DIRECTORY_SEPARATOR . "schedule.sched", json_encode($tasks));
 	}
 	
 }else{
@@ -72,7 +71,8 @@ if (strtoupper($_SERVER['REQUEST_METHOD']) == 'POST'){
 
 	if( file_exists( $curDir . DIRECTORY_SEPARATOR .  "schedule.sched") ){
 		$array = file_get_contents( $curDir . DIRECTORY_SEPARATOR .  "schedule.sched");
-		$tasks = unserialize ($array);	
+		$tasks = json_decode($array, true);
+		if(!is_array($tasks)){ $tasks = unserialize($array); }
 	}else{
 		echo "No Schedule file!";
 	}

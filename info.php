@@ -35,8 +35,8 @@ if (strtoupper($_SERVER['REQUEST_METHOD']) == 'GET'){
         this.postData.add(new BasicNameValuePair("data", dataString));
 		*/
 
-		$did = $_REQUEST['delete'];
-		$fullDelete =  $_REQUEST['fullDelete'];
+		$did = (int)$_REQUEST['delete'];
+		$fullDelete =  (int)$_REQUEST['fullDelete'];
 
 		$CMD = buildGipCommand("DeviceDelete", "<did>".$did."</did>".($fullDelete == 1 ? '<full>1</full>' : ''));
 		$result = getCurlReturn($CMD);
@@ -51,10 +51,10 @@ if (strtoupper($_SERVER['REQUEST_METHOD']) == 'GET'){
 if (strtoupper($_SERVER['REQUEST_METHOD']) == 'POST'){
 
 	if(isset($_POST['did']) && $_POST['did'] != "" ){
-		$did = $_POST['did'];
+		$did = (int)$_POST['did'];
 		$name = $_POST['name'];
-		$color = $_POST['color'];
-		$remote = $_POST['remote'];
+		$color = (int)$_POST['color'];
+		$remote = (int)$_POST['remote'];
 		$imdata = "";
 
 		if( isset($_FILES["image"]) && $_FILES["image"]["tmp_name"] != "" ){
@@ -68,13 +68,13 @@ if (strtoupper($_SERVER['REQUEST_METHOD']) == 'POST'){
 						echo "Sorry, only JPG, JPEG, PNG & GIF files are allowed.";
 					}else{
 						$imdata = base64_encode( file_get_contents($_FILES["image"]["tmp_name"] ) );
-						echo '<p><img src="data:image/png;base64,'.$imdata.'" /></p>';
+						echo '<p><img src="data:image/png;base64,'.h($imdata).'" /></p>';
 					}
 				}
 			}
 		}
 
-		$CMD = buildGipCommand("DeviceSetInfo", "<did>".$did."</did><name>".$name."</name>".($color != "" ? "<color>".$color."</color>" : "").($imdata != "" ? "<image>".$imdata."</image>" : "").($remote != "" ? "<other><rcgroup>".$remote."</rcgroup></other>" : ""));
+		$CMD = buildGipCommand("DeviceSetInfo", "<did>".$did."</did><name>".xmlEscape($name)."</name>".($color != "" ? "<color>".$color."</color>" : "").($imdata != "" ? "<image>".xmlEscape($imdata)."</image>" : "").($remote != "" ? "<other><rcgroup>".$remote."</rcgroup></other>" : ""));
 
 		$result = getCurlReturn($CMD);
 		$array = xmlToArray($result);
@@ -83,11 +83,11 @@ if (strtoupper($_SERVER['REQUEST_METHOD']) == 'POST'){
 	}
 
 	if(isset($_POST['rid']) && $_POST['rid'] != "" ){
-		$rid = $_POST['rid'];
+		$rid = (int)$_POST['rid'];
 		$name =  $_POST['name'];
-		$color = $_POST['color'];
+		$color = (int)$_POST['color'];
 
-		$CMD = buildGipCommand("RoomSetInfo", "<rid>".$rid."</rid><name>".$name."</name>".($color != "" ? "<colorid>".$color."</colorid>" : ""));
+		$CMD = buildGipCommand("RoomSetInfo", "<rid>".$rid."</rid><name>".xmlEscape($name)."</name>".($color != "" ? "<colorid>".$color."</colorid>" : ""));
 		$result = getCurlReturn($CMD);
 		$array = xmlToArray($result);
 
@@ -97,8 +97,8 @@ if (strtoupper($_SERVER['REQUEST_METHOD']) == 'POST'){
 
 
 if( isset($_REQUEST['did']) && $_REQUEST['did'] != "" ){
-	$did = $_REQUEST['did'];
-	pageHeader("TCP Lighting Controller - Device Controller - Device: ".$did);
+	$did = (int)$_REQUEST['did'];
+	pageHeader("TCP Lighting Controller - Device Controller - Device: ".h($did));
 	?>
 
 	<?php
@@ -130,11 +130,11 @@ if( isset($_REQUEST['did']) && $_REQUEST['did'] != "" ){
 			<legend>Update Device</legend>
 		<?php
 		if( isset( $array["image"] ) && ! is_array( $array["image"]) ){
-			echo '<p><img src="data:image/png;base64,'.$array["image"].'" /></p>';
+			echo '<p><img src="data:image/png;base64,'.h($array["image"]).'" /></p>';
 		}
 		?>
-		<label for="name">Name: <input name="name" id="name" value="<?php echo $array["name"]; ?>" /></label><br />
-		<label for="did">Device ID: <?php echo $did; ?></label><br />
+		<label for="name">Name: <input name="name" id="name" value="<?php echo h($array["name"]); ?>" /></label><br />
+		<label for="did">Device ID: <?php echo h($did); ?></label><br />
 		<label for="image">Image: <input type="file" name="image" id="image"></label><br />
 		<label for="color">Color:
 			<?php renderColorSelect($array["colorid"], $ROOM_COLOURS, true); ?>
@@ -144,7 +144,7 @@ if( isset($_REQUEST['did']) && $_REQUEST['did'] != "" ){
 		if( isset( $ROOM_COLOURS[$color] ) ){
 		?>
 			<label for="room">Room:
-			<?php echo '<a href="info.php?rid='.$ROOM_COLOURS[$color]['room'].'">'.$ROOM_COLOURS[$color]['name'].'</a>'; ?>
+			<?php echo '<a href="info.php?rid='.(int)$ROOM_COLOURS[$color]['room'].'">'.h($ROOM_COLOURS[$color]['name']).'</a>'; ?>
 			</label>
 		<?php
 		}
@@ -168,7 +168,7 @@ if( isset($_REQUEST['did']) && $_REQUEST['did'] != "" ){
 			<img id="remote" style="display: none;" src="<?php echo LOCAL_URL; ?>/css/images/remote.png" />
 		</label><br />
 
-		<input type="hidden" name="did" value="<?php echo $did; ?>" /><br />
+		<input type="hidden" name="did" value="<?php echo h($did); ?>" /><br />
 		<input type="submit" value="SAVE" />
 		</fieldset>
 	</form>
@@ -181,7 +181,7 @@ if( isset($_REQUEST['did']) && $_REQUEST['did'] != "" ){
 		echo '</div>';
 
 		?>
-			<button id="deleteDevice" data-deviceID="<?php echo $device['did'];  ?>">Delete Device</button>
+			<button id="deleteDevice" data-deviceID="<?php echo h($device['did']);  ?>">Delete Device</button>
 		<?php
 	echo '</div>';
 	?>
@@ -196,8 +196,8 @@ if( isset($_REQUEST['did']) && $_REQUEST['did'] != "" ){
 }
 
 if( isset($_REQUEST['rid']) && $_REQUEST['rid'] != "" ){
-	$rid = $_REQUEST['rid'];
-	pageHeader("TCP Lighting Controller - Room Controller - Room: ".$rid);
+	$rid = (int)$_REQUEST['rid'];
+	pageHeader("TCP Lighting Controller - Room Controller - Room: ".h($rid));
 
 	$CMD = buildGipCommand("RoomGetInfoAll", "<rid>".$rid."</rid><fields>name,power,product,class,image,imageurl,control,other</fields>");
 
@@ -210,17 +210,17 @@ if( isset($_REQUEST['rid']) && $_REQUEST['rid'] != "" ){
 		<fieldset>
 			<legend>Update Room</legend>
 			<?php
-			echo '<h3>&lsquo;'.$room["name"].'&rsquo; - Room ID: '.$rid.'</h3>';
+			echo '<h3>&lsquo;'.h($room["name"]).'&rsquo; - Room ID: '.h($rid).'</h3>';
 			?>
-			<input type="hidden" name="rid" value="<?php echo $rid; ?>" />
+			<input type="hidden" name="rid" value="<?php echo h($rid); ?>" />
 
-			<p><label for="name">Name: <input name="name" id="name" value="<?php echo $room["name"]; ?>" /></label></p>
+			<p><label for="name">Name: <input name="name" id="name" value="<?php echo h($room["name"]); ?>" /></label></p>
 
 			<p><label for="color">Color:
 			<?php renderColorSelect($room["colorid"], $ROOM_COLOURS); ?>
 			<?php
 				if( isset($ROOM_COLOURS[ $room["colorid"] ]) ){
-					echo '<div style="display: inline-block; background-color: #'.$ROOM_COLOURS[ $room["colorid"] ]["hex"].'; padding: 5px;">'.$ROOM_COLOURS[ $room["colorid"] ]["hex"].'</div>';
+					echo '<div style="display: inline-block; background-color: #'.h($ROOM_COLOURS[ $room["colorid"] ]["hex"]).'; padding: 5px;">'.h($ROOM_COLOURS[ $room["colorid"] ]["hex"]).'</div>';
 				}
 			?>
 		</label></p>
@@ -229,7 +229,7 @@ if( isset($_REQUEST['rid']) && $_REQUEST['rid'] != "" ){
 		</fieldset>
 		</form>
 			<?php
-			echo '<div class="roomContainer" data-room-id="'. $rid.'" style="margin-top:20px;">';
+			echo '<div class="roomContainer" data-room-id="'. h($rid).'" style="margin-top:20px;">';
 			$DEVICES = extractDevicesFromRoom($room);
 			$deviceCount = sizeof($DEVICES);
 
@@ -253,8 +253,8 @@ if( isset($_REQUEST['rid']) && $_REQUEST['rid'] != "" ){
 			}
 
 			echo '<div class="room-controls">';
-				echo 'Room Brightness: <div class="room-slider" data-value="'.($roomBrightness/$roomDevices).'" data-room-id="'. $room["rid"].'"></div>';
-				echo 'Room <button data-room-id="'. $room["rid"].'" class="onOffToggleButton buttonOn">On</button> | <button data-room-id="'. $room["rid"].'" class="onOffToggleButton buttonOff">Off</button>';
+				echo 'Room Brightness: <div class="room-slider" data-value="'.h($roomBrightness/$roomDevices).'" data-room-id="'. h($room["rid"]).'"></div>';
+				echo 'Room <button data-room-id="'. h($room["rid"]).'" class="onOffToggleButton buttonOn">On</button> | <button data-room-id="'. h($room["rid"]).'" class="onOffToggleButton buttonOff">Off</button>';
 			echo '</div>';
 		echo '</div>';
 	echo '</div>';

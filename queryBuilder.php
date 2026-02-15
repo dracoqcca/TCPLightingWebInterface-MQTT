@@ -15,11 +15,11 @@ if( ALLOW_EXTERNAL_API_ACCESS == 1 ){
 ?>
 
 <script>
-var allowExternalAPI = "<?php echo ALLOW_EXTERNAL_API_ACCESS; ?>";
-var externalAddr = "<?php echo EXTERNAL_DDNS_URL; ?>";
-var externalPort = "<?php echo EXTERNAL_PORT; ?>";
-var externalPass = "<?php echo EXTERNAL_API_PASSWORD; ?>";
-var requireExtPass = "<?php echo REQUIRE_EXTERNAL_API_PASSWORD; ?>";
+var allowExternalAPI = "<?php echo h(ALLOW_EXTERNAL_API_ACCESS); ?>";
+var externalAddr = "<?php echo h(EXTERNAL_DDNS_URL); ?>";
+var externalPort = "<?php echo h(EXTERNAL_PORT); ?>";
+var externalPass = "<?php echo h(EXTERNAL_API_PASSWORD); ?>";
+var requireExtPass = "<?php echo h(REQUIRE_EXTERNAL_API_PASSWORD); ?>";
 
 $(function(){
 	$('#sceneLights').hide();
@@ -165,10 +165,10 @@ $(function(){
 	if( $DATA !== null && sizeof($DATA) > 0 ){
 		echo '<optgroup label="Rooms">';
 		foreach($DATA as $room){
-			echo '<option data-device-type="room" data-device-id="'.$room["rid"].'" data-room-name="'.$room["name"].'">'    .  $room["name"] .    '</option>';
+			echo '<option data-device-type="room" data-device-id="'.$room["rid"].'" data-room-name="'.h($room["name"]).'">'.h($room["name"]).'</option>';
 			$roomDevices = extractDevicesFromRoom($room);
 			foreach($roomDevices as $dev){
-				$DEVICES[] = '<option data-device-name="'.$dev["name"].'" data-device-type="light" data-device-id="'.$dev["did"].'" data-room-name="'.$room["name"].'">'. $dev["name"] ."</option>";
+				$DEVICES[] = '<option data-device-name="'.h($dev["name"]).'" data-device-type="light" data-device-id="'.$dev["did"].'" data-room-name="'.h($room["name"]).'">'.h($dev["name"])."</option>";
 			}
 		}
 		echo '</optgroup>';
@@ -187,7 +187,7 @@ $(function(){
 	if( is_array($scenes) ){
 		echo '<optgroup label="Scenes">';
 		for($x = 0; $x < sizeof($scenes); $x++){
-			echo '<option  data-device-type="scene" data-device-id="'.$scenes[$x]["sid"] .'" data-device-name="'.$scenes[$x]["name"] .'">'.$scenes[$x]["name"] . " - " . $scenes[$x]["sid"] . "</option>";
+			echo '<option  data-device-type="scene" data-device-id="'.$scenes[$x]["sid"] .'" data-device-name="'.h($scenes[$x]["name"]) .'">'.h($scenes[$x]["name"]) . " - " . $scenes[$x]["sid"] . "</option>";
 		}
 		echo '</optgroup>';
 	}
