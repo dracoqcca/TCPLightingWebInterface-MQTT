@@ -22,6 +22,9 @@ import requests
 log = logging.getLogger("mqtt-bridge")
 
 
+API_PATH = "/api.php"
+
+
 class Config:
     """Read and validate configuration from environment variables."""
 
@@ -39,6 +42,7 @@ class Config:
         self.api_base_url = os.environ.get("API_BASE_URL", "")
         self.poll_interval = int(os.environ.get("POLL_INTERVAL", "5"))
         self.bridge_ip = os.environ.get("BRIDGE_IP", "")
+        self.bridge_ssh_user = os.environ.get("BRIDGE_SSH_USER", "root")
         self.bridge_ssh_password = os.environ.get("BRIDGE_SSH_PASSWORD", "")
         self.reboot_threshold = int(os.environ.get("BRIDGE_REBOOT_THRESHOLD", "3"))
         self.reboot_cooldown = int(os.environ.get("BRIDGE_REBOOT_COOLDOWN", "300"))
@@ -73,6 +77,70 @@ class StateDiffer:
         return changed
 
 
+class BridgeRebootManager:
+    """Manages auto-reboot of the physical TCP bridge after consecutive failures."""
+
+    def __init__(self, config):
+        self.cfg = config
+        self._consecutive_failures = 0
+        self._last_reboot_time = 0.0
+
+    def record_failure(self):
+        """Record a poll failure."""
+        self._consecutive_failures += 1
+
+    def reset_failures(self):
+        """Reset the consecutive failure counter on a successful poll."""
+        self._consecutive_failures = 0
+
+    def maybe_reboot(self, auto_reboot_enabled):
+        """Check if conditions are met and reboot the bridge if so."""
+        if not self.cfg.bridge_ssh_password or not self.cfg.bridge_ip:
+            return  # Feature disabled
+
+        if not auto_reboot_enabled:
+            return  # Disabled via web UI
+
+        if self._consecutive_failures < self.cfg.reboot_threshold:
+            return  # Not enough failures yet
+
+        now = time.time()
+        elapsed = now - self._last_reboot_time
+        if elapsed < self.cfg.reboot_cooldown:
+            log.warning(
+                "Bridge reboot on cooldown (%ds remaining)",
+                int(self.cfg.reboot_cooldown - elapsed),
+            )
+            return
+
+        self._reboot()
+
+    def _reboot(self):
+        """SSH into the physical TCP bridge and reboot it."""
+        import paramiko  # lazy import — only needed when rebooting
+
+        log.warning(
+            "Rebooting TCP bridge at %s after %d consecutive failures",
+            self.cfg.bridge_ip, self._consecutive_failures,
+        )
+        try:
+            ssh = paramiko.SSHClient()
+            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            ssh.connect(
+                self.cfg.bridge_ip,
+                username=self.cfg.bridge_ssh_user,
+                password=self.cfg.bridge_ssh_password,
+                timeout=10,
+            )
+            ssh.exec_command("/sbin/reboot")
+            ssh.close()
+            self._last_reboot_time = time.time()
+            self._consecutive_failures = 0
+            log.warning("Reboot command sent to TCP bridge")
+        except Exception as e:
+            log.error("Failed to SSH reboot bridge: %s", e)
+
+
 class MQTTBridge:
     """Core MQTT bridge daemon."""
 
@@ -83,8 +151,7 @@ class MQTTBridge:
         self._stop_event = threading.Event()
         self._state_cache = None  # latest full state from API
         self._lock = threading.Lock()
-        self._consecutive_failures = 0
-        self._last_reboot_time = 0.0
+        self._reboot_mgr = BridgeRebootManager(config)
 
         self.client = mqtt.Client(client_id=config.client_id, clean_session=True)
         if config.username:
@@ -119,9 +186,23 @@ class MQTTBridge:
         self.client.publish(f"control/{self.cfg.control}/status", "offline", qos=0, retain=True)
         self.client.disconnect()
 
+    @staticmethod
+    def _normalize_name(name):
+        """Replace spaces with underscores for MQTT topic segments."""
+        return name.replace(" ", "_")
+
+    def _build_topic_base(self, room_name, dev_name, did):
+        """Build the MQTT topic base path for a device."""
+        return f"{self.cfg.prefix}/{self._normalize_name(room_name)}/{self._normalize_name(dev_name)}/{did}"
+
+    def _get_cached_state(self):
+        """Return the cached state under lock."""
+        with self._lock:
+            return self._state_cache
+
     def _wait_for_api(self):
         """Wait for the PHP API to become reachable with exponential backoff."""
-        url = f"{self.cfg.api_base_url}/api.php?fx=getState"
+        url = f"{self.cfg.api_base_url}{API_PATH}?fx=getState"
         delay = 2
         max_delay = 30
         while not self._stop_event.is_set():
@@ -220,8 +301,7 @@ class MQTTBridge:
 
     def _classify_uid(self, uid):
         """Determine if a UID belongs to a room or scene using cached state."""
-        with self._lock:
-            state = self._state_cache
+        state = self._get_cached_state()
         if not state:
             return "room"  # default guess
 
@@ -235,7 +315,7 @@ class MQTTBridge:
 
     def _call_api(self, fx, type_or_val, uid, val):
         """Call the PHP API for a command."""
-        url = self.cfg.api_base_url + "/api.php"
+        url = self.cfg.api_base_url + API_PATH
         if fx == "scene":
             # Scene API: fx=scene&type=0/1&uid=sid
             params = {"fx": "scene", "type": type_or_val, "uid": uid}
@@ -260,13 +340,17 @@ class MQTTBridge:
 
     def _poll_and_publish(self):
         """Fetch current state from API and publish changes to MQTT."""
-        url = f"{self.cfg.api_base_url}/api.php?fx=getState"
+        url = f"{self.cfg.api_base_url}{API_PATH}?fx=getState"
         try:
             r = requests.get(url, timeout=10)
             if r.status_code >= 500:
                 log.warning("API returned %d", r.status_code)
-                self._consecutive_failures += 1
-                self._maybe_reboot_bridge()
+                self._reboot_mgr.record_failure()
+                auto_reboot = True
+                state = self._get_cached_state()
+                if state:
+                    auto_reboot = state.get("settings", {}).get("autoRebootEnabled", True)
+                self._reboot_mgr.maybe_reboot(auto_reboot)
                 return
             if r.status_code != 200:
                 log.warning("API returned %d", r.status_code)
@@ -274,14 +358,18 @@ class MQTTBridge:
             state = r.json()
         except requests.RequestException as e:
             log.error("Failed to fetch state: %s", e)
-            self._consecutive_failures += 1
-            self._maybe_reboot_bridge()
+            self._reboot_mgr.record_failure()
+            auto_reboot = True
+            cached = self._get_cached_state()
+            if cached:
+                auto_reboot = cached.get("settings", {}).get("autoRebootEnabled", True)
+            self._reboot_mgr.maybe_reboot(auto_reboot)
             return
         except ValueError as e:
             log.error("Failed to parse state JSON: %s", e)
             return  # Bad JSON — don't count toward reboot
 
-        self._consecutive_failures = 0
+        self._reboot_mgr.reset_failures()
 
         with self._lock:
             self._state_cache = state
@@ -289,17 +377,15 @@ class MQTTBridge:
         # Build flat device list with room context
         all_devices = []
         for room in state.get("rooms", []):
-            room_name = room.get("name", "").replace(" ", "_")
+            room_name = room.get("name", "")
             for dev in room.get("devices", []):
                 dev["_room_name"] = room_name
                 all_devices.append(dev)
 
         changed = self.differ.diff(all_devices)
         for dev in changed:
-            room_name = dev["_room_name"]
-            dev_name = dev.get("name", "").replace(" ", "_")
             did = dev["id"]
-            base = f"{self.cfg.prefix}/{room_name}/{dev_name}/{did}"
+            base = self._build_topic_base(dev["_room_name"], dev.get("name", ""), did)
 
             self.client.publish(f"{base}/status", str(dev.get("state", "0")), qos=0, retain=True)
             self.client.publish(f"{base}/brightness", str(dev.get("level", "0")), qos=0, retain=True)
@@ -313,73 +399,20 @@ class MQTTBridge:
         if len(changed) == len(all_devices) and all_devices:
             self._publish_discovery()
 
-    def _maybe_reboot_bridge(self):
-        """Check if conditions are met to reboot the physical TCP bridge."""
-        if not self.cfg.bridge_ssh_password or not self.cfg.bridge_ip:
-            return  # Feature disabled
-
-        # Check web UI toggle from cached state
-        with self._lock:
-            state = self._state_cache
-        if state and not state.get("settings", {}).get("autoRebootEnabled", True):
-            return  # Disabled via web UI
-
-        if self._consecutive_failures < self.cfg.reboot_threshold:
-            return  # Not enough failures yet
-
-        now = time.time()
-        elapsed = now - self._last_reboot_time
-        if elapsed < self.cfg.reboot_cooldown:
-            log.warning(
-                "Bridge reboot on cooldown (%ds remaining)",
-                int(self.cfg.reboot_cooldown - elapsed),
-            )
-            return
-
-        self._reboot_bridge()
-
-    def _reboot_bridge(self):
-        """SSH into the physical TCP bridge and reboot it."""
-        import paramiko  # lazy import — only needed when rebooting
-
-        log.warning(
-            "Rebooting TCP bridge at %s after %d consecutive failures",
-            self.cfg.bridge_ip, self._consecutive_failures,
-        )
-        try:
-            ssh = paramiko.SSHClient()
-            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            ssh.connect(
-                self.cfg.bridge_ip,
-                username="root",
-                password=self.cfg.bridge_ssh_password,
-                timeout=10,
-            )
-            ssh.exec_command("/sbin/reboot")
-            ssh.close()
-            self._last_reboot_time = time.time()
-            self._consecutive_failures = 0
-            log.warning("Reboot command sent to TCP bridge")
-        except Exception as e:
-            log.error("Failed to SSH reboot bridge: %s", e)
-
     def _publish_discovery(self):
         """Publish Home Assistant MQTT discovery configs for all devices."""
         if not self.cfg.enable_ha_discovery:
             return
 
-        with self._lock:
-            state = self._state_cache
+        state = self._get_cached_state()
         if not state:
             return
 
         count = 0
         for room in state.get("rooms", []):
-            room_name = room.get("name", "").replace(" ", "_")
             for dev in room.get("devices", []):
-                dev_name = dev.get("name", "").replace(" ", "_")
                 did = dev["id"]
-                base = f"{self.cfg.prefix}/{room_name}/{dev_name}/{did}"
+                base = self._build_topic_base(room.get("name", ""), dev.get("name", ""), did)
 
                 config = {
                     "name": dev.get("name", ""),
