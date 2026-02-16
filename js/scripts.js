@@ -136,4 +136,36 @@ $(function(){
 	$('#arrayDump').click(function(){
 		$(this).toggleClass('toggled');
 	});
+
+	// Poll cached state for real-time updates from Home Assistant / MQTT
+	if($('.room-devices').length){
+		var lastTs = 0;
+		setInterval(function(){
+			$.getJSON('api.php?fx=getStateCache', function(data){
+				if(!data || data.ts <= lastTs) return;
+				lastTs = data.ts;
+				$.each(data.devices, function(_, dev){
+					var $dev = $('.device[data-device-id="' + dev.id + '"]');
+					if(!$dev.length) return;
+					var isOn = parseInt(dev.state) > 0;
+					var level = parseInt(dev.level) || 0;
+
+					if(isOn && !$dev.hasClass('light-on')){
+						setDeviceLightState($dev, true);
+					} else if(!isOn && $dev.hasClass('light-on')){
+						setDeviceLightState($dev, false);
+					}
+
+					var $slider = $dev.find('.device-slider');
+					if($slider.length && $slider.slider('value') !== level){
+						$slider.slider('value', level);
+						$slider.next('.slider-value').text(level + '%');
+						if(isOn){
+							$dev.css('background-color', 'rgba(255, 200, 50,' + (level / 100) + ')');
+						}
+					}
+				});
+			});
+		}, 3000);
+	}
 });

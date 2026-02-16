@@ -368,6 +368,31 @@
 			exit;
 		}
 
+		if($function == "pushState"){
+			$json = file_get_contents("php://input");
+			$devices = json_decode($json, true);
+			if(is_array($devices)){
+				$cache = array("ts" => time(), "devices" => $devices);
+				file_put_contents(dirname(__FILE__) . DIRECTORY_SEPARATOR . "state_cache.json", json_encode($cache), LOCK_EX);
+				echo json_encode(array("success" => 1));
+			} else {
+				echo json_encode(array("error" => "Invalid JSON"));
+			}
+			exit;
+		}
+
+		if($function == "getStateCache"){
+			$file = dirname(__FILE__) . DIRECTORY_SEPARATOR . "state_cache.json";
+			ob_clean();
+			header('Content-Type: application/json');
+			if(file_exists($file)){
+				readfile($file);
+			} else {
+				echo json_encode(array("ts" => 0, "devices" => array()));
+			}
+			exit;
+		}
+
 		$sceneDevices = array("rooms"=> array(), "devices" => array(), "count" => 0);
 		$sceneList = array();
 

@@ -327,6 +327,20 @@ class MQTTBridge:
                 return "scene"
         return "room"  # fallback
 
+    def _push_state_cache(self, devices):
+        """POST full device state to PHP so the browser can poll it."""
+        url = f"{self.cfg.api_base_url}{API_PATH}?fx=pushState"
+        payload = [{
+            "id": d["id"],
+            "state": d.get("state", "0"),
+            "level": d.get("level", "0"),
+            "online": d.get("online", 0),
+        } for d in devices]
+        try:
+            requests.post(url, json=payload, timeout=5)
+        except requests.RequestException as e:
+            log.debug("Failed to push state cache: %s", e)
+
     def _call_api(self, fx, type_or_val, uid, val):
         """Call the PHP API for a command."""
         url = self.cfg.api_base_url + API_PATH
@@ -411,6 +425,7 @@ class MQTTBridge:
 
         if changed:
             log.info("Published state for %d device(s)", len(changed))
+            self._push_state_cache(all_devices)
 
         # Publish HA discovery on first poll (when differ returns all devices)
         if len(changed) == len(all_devices) and all_devices:
