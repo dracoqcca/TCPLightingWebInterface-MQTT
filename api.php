@@ -361,7 +361,7 @@
 		}
 
 		if($function == "setAutoReboot"){
-			$enabled = ($val === "1" || $val === "true") ? true : false;
+			$enabled = ($val == 1 || $val === "true") ? true : false;
 			saveSetting("autoRebootEnabled", $enabled);
 			echo json_encode(array("success" => 1, "autoRebootEnabled" => $enabled));
 			exit;
