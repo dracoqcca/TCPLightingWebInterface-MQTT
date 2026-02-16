@@ -46,6 +46,7 @@ class Config:
         self.bridge_ssh_password = os.environ.get("BRIDGE_SSH_PASSWORD", "")
         self.reboot_threshold = int(os.environ.get("BRIDGE_REBOOT_THRESHOLD", "3"))
         self.reboot_cooldown = int(os.environ.get("BRIDGE_REBOOT_COOLDOWN", "300"))
+        self.reboot_max_retries = int(os.environ.get("BRIDGE_REBOOT_MAX_RETRIES", "3"))
 
         missing = []
         if not self.broker:
@@ -84,14 +85,16 @@ class BridgeRebootManager:
         self.cfg = config
         self._consecutive_failures = 0
         self._last_reboot_time = 0.0
+        self._reboot_count = 0
 
     def record_failure(self):
         """Record a poll failure."""
         self._consecutive_failures += 1
 
     def reset_failures(self):
-        """Reset the consecutive failure counter on a successful poll."""
+        """Reset the consecutive failure counter and reboot count on a successful poll."""
         self._consecutive_failures = 0
+        self._reboot_count = 0
 
     def maybe_reboot(self, auto_reboot_enabled):
         """Check if conditions are met and reboot the bridge if so."""
@@ -103,6 +106,15 @@ class BridgeRebootManager:
 
         if self._consecutive_failures < self.cfg.reboot_threshold:
             return  # Not enough failures yet
+
+        if self._reboot_count >= self.cfg.reboot_max_retries:
+            if self._reboot_count == self.cfg.reboot_max_retries:
+                log.error(
+                    "Bridge reboot limit reached (%d/%d). Giving up until next successful poll.",
+                    self._reboot_count, self.cfg.reboot_max_retries,
+                )
+                self._reboot_count += 1  # Only log once
+            return
 
         now = time.time()
         elapsed = now - self._last_reboot_time
@@ -136,7 +148,9 @@ class BridgeRebootManager:
             ssh.close()
             self._last_reboot_time = time.time()
             self._consecutive_failures = 0
-            log.warning("Reboot command sent to TCP bridge")
+            self._reboot_count += 1
+            log.warning("Reboot command sent to TCP bridge (%d/%d)",
+                        self._reboot_count, self.cfg.reboot_max_retries)
         except Exception as e:
             log.error("Failed to SSH reboot bridge: %s", e)
 
@@ -343,19 +357,6 @@ class MQTTBridge:
         url = f"{self.cfg.api_base_url}{API_PATH}?fx=getState"
         try:
             r = requests.get(url, timeout=10)
-            if r.status_code >= 500:
-                log.warning("API returned %d", r.status_code)
-                self._reboot_mgr.record_failure()
-                auto_reboot = True
-                state = self._get_cached_state()
-                if state:
-                    auto_reboot = state.get("settings", {}).get("autoRebootEnabled", True)
-                self._reboot_mgr.maybe_reboot(auto_reboot)
-                return
-            if r.status_code != 200:
-                log.warning("API returned %d", r.status_code)
-                return  # 4xx etc — don't count toward reboot
-            state = r.json()
         except requests.RequestException as e:
             log.error("Failed to fetch state: %s", e)
             self._reboot_mgr.record_failure()
@@ -365,9 +366,25 @@ class MQTTBridge:
                 auto_reboot = cached.get("settings", {}).get("autoRebootEnabled", True)
             self._reboot_mgr.maybe_reboot(auto_reboot)
             return
-        except ValueError as e:
-            log.error("Failed to parse state JSON: %s", e)
-            return  # Bad JSON — don't count toward reboot
+
+        if r.status_code >= 500:
+            log.warning("API returned %d", r.status_code)
+            self._reboot_mgr.record_failure()
+            auto_reboot = True
+            state = self._get_cached_state()
+            if state:
+                auto_reboot = state.get("settings", {}).get("autoRebootEnabled", True)
+            self._reboot_mgr.maybe_reboot(auto_reboot)
+            return
+        if r.status_code != 200:
+            log.warning("API returned %d", r.status_code)
+            return  # 4xx etc — don't count toward reboot
+
+        try:
+            state = r.json()
+        except ValueError:
+            log.warning("Empty or invalid JSON from API (bridge may be busy)")
+            return  # Don't count toward reboot — PHP returned 200 but bridge was unreachable
 
         self._reboot_mgr.reset_failures()
 

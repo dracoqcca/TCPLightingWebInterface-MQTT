@@ -5,6 +5,7 @@
  *
  */
 
+	ob_start();
 	include "include.php";
 
 	global $REMOTE_IP;
@@ -439,9 +440,9 @@
 						foreach($DEVICES_IN_ROOM as $d){
 							$rd = array();
 							$rd["id"] = $d["did"];
-							$rd["name"] = $d["name"];
-							$rd["level"] = ($d["level"] != null ? (int)$d["level"] : 0);
-							$rd["state"] = $d["state"];
+							$rd["name"] = $d["name"] ?? "";
+							$rd["level"] = isset($d["level"]) ? (int)$d["level"] : 0;
+							$rd["state"] = $d["state"] ?? 0;
 							$rd["online"] = (isset($d['offline']) && $d['offline'] == 1) ? 1 : 0;
 							if( isset($d["other"]) && isset( $d["other"]["rcgroup"] ) && $d["other"]["rcgroup"] != null ){
 								$rd["buttonNum"] = $d["other"]["rcgroup"];
@@ -495,6 +496,7 @@
 			if( $function == "getState"  ){
 				$settings = getSettings();
 				$BRIDGE["settings"] = $settings;
+				ob_clean();
 				header('Content-Type: application/json');
 				echo json_encode( $BRIDGE );
 				exit;
